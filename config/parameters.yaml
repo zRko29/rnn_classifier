@@ -1,0 +1,37 @@
+steps: 30
+K_upper_lim: 0.1
+
+hidden_size: 64
+linear_size: 32 # used when num_lin_layers > 1
+num_rnn_layers: 2
+num_lin_layers: 2
+dropout: 0.0
+
+epochs: 100
+batch_size: 64
+loss: binary_crossentropy
+optimizer: adam
+lr: 0.0001
+
+shuffle_paths: True # makes sense for linear sampling
+shuffle_batches: False # shuffle batches between epochs
+
+gridsearch:
+  hidden_size: { lower: 100, upper: 300, dtype: int }
+  linear_size: { lower: 50, upper: 240, dtype: int }
+  batch_size: { lower: 30, upper: 80, dtype: int }
+  lr: { lower: 0.0002, upper: 0.005, dtype: float }
+  num_rnn_layers:
+    {
+      lower: 2,
+      upper: 4,
+      dtype: int,
+      layer_sizes: { lower: 120, upper: 210, layer_type: rnn, varied: True },
+    }
+  num_lin_layers:
+    {
+      lower: 2,
+      upper: 4,
+      dtype: int,
+      layer_sizes: { lower: 20, upper: 80, layer_type: lin, varied: True },
+    }
