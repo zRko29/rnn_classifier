@@ -96,6 +96,7 @@ if __name__ == "__main__":
         trainer = pl.Trainer(
             profiler=profiler_callback,
             max_epochs=params.get("epochs"),
+            precision=params.get("precision"),
             enable_progress_bar=True,
             logger=tb_logger,
             callbacks=[

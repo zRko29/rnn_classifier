@@ -7,6 +7,7 @@ warnings.filterwarnings(
     "ignore", ".*Consider increasing the value of the `num_workers` argument*"
 )
 
+
 import logging
 
 logging.getLogger("pytorch_lightning").setLevel(0)
@@ -15,7 +16,7 @@ from utils.mapping_helper import StandardMap
 from utils.helper import Model, Data
 
 if __name__ == "__main__":
-    version = None
+    version = 9
     name = "classification_1"
 
     directory_path = f"logs/{name}"
@@ -58,6 +59,7 @@ if __name__ == "__main__":
             model = Model(**params).load_from_checkpoint(model_path)
 
             trainer = pl.Trainer(
+                precision=params.get("precision"),
                 enable_progress_bar=False,
                 logger=False,
             )

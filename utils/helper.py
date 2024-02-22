@@ -382,12 +382,18 @@ class Gridsearch:
     def _update_params(self, params):
         rng = np.random.default_rng()
         for key, space in params.get("gridsearch").items():
-            dtype = space.get("dtype")
-            if dtype == "int":
+            type = space.get("type")
+            if type == "int":
                 params[key] = int(rng.integers(space["lower"], space["upper"] + 1))
-            elif dtype == "bool":
-                params[key] = rng.choice([True, False])
-            elif dtype == "float":
+            elif type == "choice":
+                list = space.get("list")
+                choice = rng.choice(list)
+                try:
+                    choice = float(choice)
+                except:
+                    choice = str(choice)
+                params[key] = choice
+            elif type == "float":
                 params[key] = rng.uniform(space["lower"], space["upper"])
             print(f"{key} = {params[key]}")
 
