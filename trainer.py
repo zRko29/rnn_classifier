@@ -34,7 +34,7 @@ if __name__ == "__main__":
     # necessary to continue training from checkpoint, else set to None
     version = None
     name = "classification_1"
-    num_vertices = 1
+    num_vertices = 5
 
     gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
 
@@ -44,7 +44,7 @@ if __name__ == "__main__":
         datamodule = Data(
             data_path="data",
             K_upper_lim=params.get("K_upper_lim"),
-            train_size=0.8,
+            train_size=1.0,
             plot_data=False,
             print_split=False,
             binary=False,
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         print()
 
         checkpoint_callback = callbacks.ModelCheckpoint(
-            monitor="acc/val",  # careful
+            monitor="acc/train",  # careful
             mode="max",
             dirpath=save_path,
             filename="model",

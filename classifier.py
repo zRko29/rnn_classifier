@@ -16,7 +16,7 @@ from utils.mapping_helper import StandardMap
 from utils.helper import Model, Data
 
 if __name__ == "__main__":
-    version = 9
+    version = 4
     name = "classification_1"
 
     directory_path = f"logs/{name}"
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         with open(params_path, "r") as file:
             params = yaml.safe_load(file)
 
-        params.update({"init_points": 30, "steps": 60, "sampling": "random"})
+        params.update({"init_points": 50, "steps": 30, "sampling": "random"})
         maps = [
             StandardMap(K=0.1, params=params, seed=42),
             StandardMap(K=0.1, params=params, seed=41),

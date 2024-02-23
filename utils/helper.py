@@ -81,10 +81,12 @@ class Model(pl.LightningModule):
                 h_ts[i] = self.dropout(h_ts[i])
 
             # linear layers
-            output = torch.relu(self.lins[0](h_ts[-1]))
-            for i in range(1, self.num_lin_layers - 1):
-                output = torch.relu(self.lins[i](output))
-            output = self.lins[-1](output)
+            output = self.lins[0](h_ts[-1])
+            # output = self.lins[0](h_ts[-1]).relu()
+            for i in range(1, self.num_lin_layers):
+                output = self.lins[i](output)
+                # if i < self.num_lin_layers:
+                #     output = output.relu()
 
         # just take the last output
         return output
@@ -167,8 +169,10 @@ class Data(pl.LightningDataModule):
             thetas, ps, self.spectrum = self._load_data(data_path, K_upper_lim)
             steps = params.get("steps")
             # too many steps in saved data
-            thetas = thetas[:steps]
-            ps = ps[:steps]
+            num_paths = len(self.spectrum)
+            thetas = thetas[:steps, :num_paths]
+            ps = ps[:steps, :num_paths]
+            self.spectrum = self.spectrum[:num_paths]
             if binary:
                 self.spectrum = (self.spectrum > 1e-4).astype(int)
             if plot_data:
@@ -185,7 +189,10 @@ class Data(pl.LightningDataModule):
 
         # first shuffle trajectories and then make sequences
         if self.shuffle_paths:
-            self.rng.shuffle(self.data)
+            indices = np.arange(len(self.spectrum))
+            self.rng.shuffle(indices)
+            self.data = self.data[indices]
+            self.spectrum = self.spectrum[indices]
 
         xy_pairs = self._make_input_output_pairs(self.data, self.spectrum)
 
