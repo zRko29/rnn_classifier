@@ -31,6 +31,8 @@ class Model(pl.LightningModule):
         self.validation_step_losses = []
         self.training_step_accs = []
         self.validation_step_accs = []
+        self.training_step_f1 = []
+        self.validation_step_f1 = []
 
         # Create the RNN layers
         self.rnns = torch.nn.ModuleList([])
@@ -106,15 +108,19 @@ class Model(pl.LightningModule):
         accuracy = torchmetrics.functional.accuracy(
             predicted.softmax(dim=1), targets, task="binary"
         )
+        f1 = torchmetrics.functional.f1_score(
+            predicted.softmax(dim=1), targets, task="binary"
+        )
 
         self.log_dict(
-            {"loss/train": loss, "acc/train": accuracy},
+            {"loss/train": loss, "acc/train": accuracy, "f1/train": f1},
             on_epoch=True,
             prog_bar=True,
             on_step=False,
         )
         self.training_step_losses.append(loss)
         self.training_step_accs.append(accuracy)
+        self.training_step_f1.append(f1)
         return loss
 
     def validation_step(self, batch, batch_idx):
@@ -124,15 +130,19 @@ class Model(pl.LightningModule):
         accuracy = torchmetrics.functional.accuracy(
             predicted.softmax(dim=1), targets, task="binary"
         )
+        f1 = torchmetrics.functional.f1_score(
+            predicted.softmax(dim=1), targets, task="binary"
+        )
 
         self.log_dict(
-            {"loss/val": loss, "acc/val": accuracy},
+            {"loss/val": loss, "acc/val": accuracy, "f1/val": f1},
             on_step=False,
             on_epoch=True,
             prog_bar=True,
         )
         self.validation_step_losses.append(loss)
         self.validation_step_accs.append(accuracy)
+        self.validation_step_f1.append(f1)
         return loss
 
     def predict_step(self, batch, batch_idx):
@@ -142,7 +152,10 @@ class Model(pl.LightningModule):
         accuracy = torchmetrics.functional.accuracy(
             predicted.softmax(dim=1), targets[0], task="binary"
         )
-        return {"loss": loss, "accuracy": accuracy}
+        f1 = torchmetrics.functional.f1_score(
+            predicted.softmax(dim=1), targets[0], task="binary"
+        )
+        return {"loss": loss, "accuracy": accuracy, "f1": f1}
 
 
 class Data(pl.LightningDataModule):
@@ -169,10 +182,8 @@ class Data(pl.LightningDataModule):
             thetas, ps, self.spectrum = self._load_data(data_path, K_upper_lim)
             steps = params.get("steps")
             # too many steps in saved data
-            num_paths = len(self.spectrum)
-            thetas = thetas[:steps, :num_paths]
-            ps = ps[:steps, :num_paths]
-            self.spectrum = self.spectrum[:num_paths]
+            thetas = thetas[:steps]
+            ps = ps[:steps]
             if binary:
                 self.spectrum = (self.spectrum > 1e-4).astype(int)
             if plot_data:

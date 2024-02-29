@@ -33,8 +33,8 @@ CONFIG_DIR = os.path.join(ROOT_DIR, "config")
 if __name__ == "__main__":
     # necessary to continue training from checkpoint, else set to None
     version = None
-    name = "classification_1"
-    num_vertices = 5
+    name = "classification_3"
+    num_vertices = 1
 
     gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
 
@@ -44,10 +44,10 @@ if __name__ == "__main__":
         datamodule = Data(
             data_path="data",
             K_upper_lim=params.get("K_upper_lim"),
-            train_size=1.0,
-            plot_data=False,
+            train_size=0.8,
+            plot_data=True,
             print_split=False,
-            binary=False,
+            binary=True,
             params=params,
         )
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
         print()
 
         checkpoint_callback = callbacks.ModelCheckpoint(
-            monitor="acc/train",  # careful
+            monitor="acc/val",  # careful
             mode="max",
             dirpath=save_path,
             filename="model",
