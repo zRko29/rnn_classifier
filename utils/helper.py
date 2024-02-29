@@ -185,7 +185,7 @@ class Data(pl.LightningDataModule):
             thetas = thetas[:steps]
             ps = ps[:steps]
             if binary:
-                self.spectrum = (self.spectrum > 1e-4).astype(int)
+                self.spectrum = (self.spectrum * 1e5 > 10).astype(int)
             if plot_data:
                 self.plot_data(thetas, ps, self.spectrum)
 

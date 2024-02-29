@@ -32,7 +32,7 @@ class StandardMap:
 
     def retrieve_spectrum(self, binary: bool = False):
         if binary:
-            self.spectrum = (self.spectrum > 1e-4).astype(int)
+            self.spectrum = (self.spectrum * 1e5 > 10).astype(int)
         return self.spectrum
 
     def save_data(self, data_path):
@@ -142,16 +142,17 @@ class StandardMap:
 
 
 if __name__ == "__main__":
-    map = StandardMap(init_points=900, steps=1000, sampling="grid", K=1.0, seed=42)
+    map = StandardMap(init_points=40, steps=500, sampling="random", K=1.0, seed=42)
     map.generate_data(lyapunov=True)
     map.plot_data()
 
     # for K in np.arange(0.1, 2.1, 0.1):
     #     K = round(K, 1)
-    #     if str(K) not in os.listdir("data"):
-    #         os.mkdir(f"data/{K}")
+    #     path = "data2"
+    #     if str(K) not in os.listdir(path):
+    #         os.mkdir(f"{path}/{K}")
     #         map = StandardMap(
-    #             init_points=900, steps=1000, sampling="grid", K=K, seed=42
+    #             init_points=2601, steps=1000, sampling="grid", K=K, seed=42
     #         )
     #         map.generate_data(lyapunov=True)
-    #         map.save_data(data_path=f"data/{K}")
+    #         map.save_data(data_path=f"{path}/{K}")
