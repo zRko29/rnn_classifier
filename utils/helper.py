@@ -155,16 +155,29 @@ class Model(pl.LightningModule):
         f1 = torchmetrics.functional.f1_score(
             predicted.softmax(dim=1), targets[0], task="binary"
         )
-        return {"loss": loss, "accuracy": accuracy, "f1": f1}
+        predicted_labels = []
+        for pred in predicted.softmax(dim=1):
+            pred = pred.tolist()
+            if pred[0] < 0.5:
+                predicted_labels.append(1)
+            elif pred[0] >= 0.5:
+                predicted_labels.append(0)
+
+        return {
+            "loss": loss,
+            "accuracy": accuracy,
+            "f1": f1,
+            "predicted_labels": predicted_labels,
+        }
 
 
 class Data(pl.LightningDataModule):
     def __init__(
         self,
-        print_split: bool,
         plot_data: bool,
         params: dict,
         binary: bool,
+        print_split: bool = False,
         K_upper_lim: float = None,
         train_size: float = 1.0,
         map_object=None,
@@ -173,7 +186,7 @@ class Data(pl.LightningDataModule):
         super(Data, self).__init__()
         if map_object is not None:
             map_object.generate_data(lyapunov=True)
-            thetas, ps = map_object.retrieve_data()
+            self.thetas, self.ps = map_object.retrieve_data()
             self.spectrum = map_object.retrieve_spectrum(binary=binary)
             if plot_data:
                 map_object.plot_data()
@@ -182,12 +195,12 @@ class Data(pl.LightningDataModule):
             thetas, ps, self.spectrum = self._load_data(data_path, K_upper_lim)
             steps = params.get("steps")
             # too many steps in saved data
-            thetas = thetas[:steps]
-            ps = ps[:steps]
+            self.thetas = thetas[:steps]
+            self.ps = ps[:steps]
             if binary:
                 self.spectrum = (self.spectrum * 1e5 > 10).astype(int)
             if plot_data:
-                self.plot_data(thetas, ps, self.spectrum)
+                self.plot_data(self.thetas, self.ps, self.spectrum)
 
         self.batch_size = params.get("batch_size")
         self.shuffle_paths = params.get("shuffle_paths")
@@ -196,7 +209,7 @@ class Data(pl.LightningDataModule):
         self.rng = np.random.default_rng(seed=42)
 
         # data.shape = [init_points, 2, steps]
-        self.data = np.stack([thetas.T, ps.T], axis=1)
+        self.data = np.stack([self.thetas.T, self.ps.T], axis=1)
 
         # first shuffle trajectories and then make sequences
         if self.shuffle_paths:
@@ -283,8 +296,8 @@ class Data(pl.LightningDataModule):
 
     def plot_data(self, thetas, ps, spectrum):
         plt.figure(figsize=(7, 4))
-        chaotic_indices = np.where(spectrum == 1)[0]
-        regular_indices = np.where(spectrum == 0)[0]
+        chaotic_indices = np.where(np.array(spectrum) == 1)[0]
+        regular_indices = np.where(np.array(spectrum) == 0)[0]
         plt.plot(
             thetas[:, chaotic_indices],
             ps[:, chaotic_indices],
