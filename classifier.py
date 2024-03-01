@@ -12,12 +12,11 @@ import logging
 
 logging.getLogger("pytorch_lightning").setLevel(0)
 
-from utils.mapping_helper import StandardMap
 from utils.helper import Model, Data
 
 if __name__ == "__main__":
-    version = 4
-    name = "classification_1"
+    version = 12
+    name = "classification_3"
 
     directory_path = f"logs/{name}"
 
@@ -37,22 +36,18 @@ if __name__ == "__main__":
         with open(params_path, "r") as file:
             params = yaml.safe_load(file)
 
-        params.update({"init_points": 50, "steps": 30, "sampling": "random"})
-        maps = [
-            StandardMap(K=0.1, params=params, seed=42),
-            StandardMap(K=0.1, params=params, seed=41),
-            StandardMap(K=0.1, params=params, seed=40),
-            StandardMap(K=0.1, params=params, seed=39),
-        ]
+        params.update({"init_points": 30, "steps": 300})
 
-        for idx, map in enumerate(maps):
+        K_list = [0.1, 0.5, 1.0, 1.5]
+
+        for idx, K in enumerate(K_list):
             datamodule = Data(
-                map_object=map,
-                train_size=1.0,
-                plot_data=False,
-                print_split=False,
+                data_path="testing_data",
+                K_list=[K],
+                plot_data=True,
                 binary=True,
                 params=params,
+                reduce_init_points=True,
             )
 
             model_path = os.path.join(log_path, f"model.ckpt")
@@ -66,7 +61,13 @@ if __name__ == "__main__":
             predictions = trainer.predict(model=model, dataloaders=datamodule)[0]
             loss = predictions["loss"]
             accuracy = predictions["accuracy"]
+            f1 = predictions["f1"]
+            predicted_labels = predictions["predicted_labels"]
 
-            print(f"{idx}: loss= {loss:.2e}, accuracy= {accuracy:.2f}")
+            datamodule.plot_data(datamodule.thetas, datamodule.ps, predicted_labels)
+
+            print(
+                f"{idx} (K = {K}): loss = {loss:.2e}, accuracy = {accuracy:.2f}, f1 = {f1:.2f}"
+            )
 
         print("-" * 30)

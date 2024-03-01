@@ -42,10 +42,10 @@ if __name__ == "__main__":
         params = gridsearch.get_params()
 
         datamodule = Data(
-            data_path="data",
+            data_path="training_data",
             K_upper_lim=params.get("K_upper_lim"),
             train_size=0.8,
-            plot_data=True,
+            plot_data=False,
             print_split=False,
             binary=True,
             params=params,

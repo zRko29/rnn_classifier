@@ -179,9 +179,11 @@ class Data(pl.LightningDataModule):
         binary: bool,
         print_split: bool = False,
         K_upper_lim: float = None,
+        K_list: list = None,
         train_size: float = 1.0,
         map_object=None,
         data_path=None,
+        reduce_init_points=False,
     ):
         super(Data, self).__init__()
         if map_object is not None:
@@ -192,11 +194,15 @@ class Data(pl.LightningDataModule):
                 map_object.plot_data()
 
         else:
-            thetas, ps, self.spectrum = self._load_data(data_path, K_upper_lim)
+            thetas, ps, self.spectrum = self._load_data(data_path, K_upper_lim, K_list)
             steps = params.get("steps")
             # too many steps in saved data
             self.thetas = thetas[:steps]
             self.ps = ps[:steps]
+            if reduce_init_points:
+                self.thetas = self.thetas[:, : params.get("init_points")]
+                self.ps = self.ps[:, : params.get("init_points")]
+                self.spectrum = self.spectrum[: params.get("init_points")]
             if binary:
                 self.spectrum = (self.spectrum * 1e5 > 10).astype(int)
             if plot_data:
@@ -263,8 +269,8 @@ class Data(pl.LightningDataModule):
         ]
         return DataLoader(Dataset([(self.data, self.spectrum)]))
 
-    def _load_data(self, path, K_upper_lim):
-        directories = self._get_subdirectories(path, K_upper_lim)
+    def _load_data(self, path, K_upper_lim, K_list):
+        directories = self._get_subdirectories(path, K_upper_lim, K_list)
         bar_loader = tqdm(
             directories, desc="Loading data", unit=" directories", ncols=80
         )
@@ -285,12 +291,15 @@ class Data(pl.LightningDataModule):
 
         return thetas, ps, spectrum
 
-    def _get_subdirectories(self, directory, K_upper_lim):
-        subdirectories = [
-            os.path.join(directory, d)
-            for d in os.listdir(directory)
-            if os.path.isdir(os.path.join(directory, d)) and float(d) <= K_upper_lim
-        ]
+    def _get_subdirectories(self, directory, K_upper_lim, K_list):
+        subdirectories = []
+        for d in os.listdir(directory):
+            if os.path.isdir(os.path.join(directory, d)):
+                if K_upper_lim is not None and float(d) <= K_upper_lim:
+                    subdirectories.append(os.path.join(directory, d))
+                elif K_upper_lim is None and float(d) in K_list:
+                    subdirectories.append(os.path.join(directory, d))
+
         subdirectories.sort()
         return subdirectories
 
