@@ -32,18 +32,19 @@ CONFIG_DIR = os.path.join(ROOT_DIR, "config")
 
 if __name__ == "__main__":
     # necessary to continue training from checkpoint, else set to None
-    version = None
-    name = "classification_3"
-    num_vertices = 1
+    version: int | None = None
+    name: str = "classification_3"
+    num_vertices: int = 1
 
-    gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
+    gridsearch: Gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
 
     for _ in range(num_vertices):
-        params = gridsearch.get_params()
+        params: dict = gridsearch.get_params()
 
-        datamodule = Data(
+        datamodule: Data = Data(
             data_path="training_data",
-            K_upper_lim=params.get("K_upper_lim"),
+            # K_upper_lim=params.get("K_upper_lim"),
+            K_list=[0.1],
             train_size=0.8,
             plot_data=False,
             print_split=False,
@@ -51,15 +52,17 @@ if __name__ == "__main__":
             params=params,
         )
 
-        model = Model(**params)
+        model: Model = Model(**params)
 
-        logs_path = "logs"
+        logs_path: str = "logs"
 
         # **************** callbacks ****************
 
         tb_logger = TensorBoardLogger(logs_path, name=name, default_hp_metric=False)
 
-        save_path = os.path.join(logs_path, name, "version_" + str(tb_logger.version))
+        save_path: str = os.path.join(
+            logs_path, name, "version_" + str(tb_logger.version)
+        )
 
         print(f"Running version_{tb_logger.version}")
         print()

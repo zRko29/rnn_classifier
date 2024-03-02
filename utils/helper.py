@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import time
 from datetime import timedelta
 import os, yaml
-from tqdm import tqdm
+from typing import Tuple
 
 
 class Model(pl.LightningModule):
@@ -19,13 +19,13 @@ class Model(pl.LightningModule):
         super(Model, self).__init__()
         self.save_hyperparameters()
 
-        self.hidden_sizes = params.get("rnn_sizes")
-        self.linear_sizes = params.get("lin_sizes")
-        self.num_rnn_layers = params.get("num_rnn_layers")
-        self.num_lin_layers = params.get("num_lin_layers")
-        dropout = params.get("dropout")
-        self.lr = params.get("lr")
-        self.optimizer = params.get("optimizer")
+        self.hidden_sizes: list[int] = params.get("rnn_sizes")
+        self.linear_sizes: list[int] = params.get("lin_sizes")
+        self.num_rnn_layers: int = params.get("num_rnn_layers")
+        self.num_lin_layers: int = params.get("num_lin_layers")
+        dropout: float = params.get("dropout")
+        self.lr: float = params.get("lr")
+        self.optimizer: str = params.get("optimizer")
 
         self.training_step_losses = []
         self.validation_step_losses = []
@@ -62,13 +62,13 @@ class Model(pl.LightningModule):
         # takes care of dtype
         self.to(torch.double)
 
-    def _init_hidden(self, shape0: int, hidden_shapes: int):
+    def _init_hidden(self, shape0: int, hidden_shapes: int) -> list[torch.Tensor]:
         return [
             torch.zeros(shape0, hidden_shape, dtype=torch.double).to(self.device)
             for hidden_shape in hidden_shapes
         ]
 
-    def forward(self, input_t):
+    def forward(self, input_t: torch.Tensor) -> torch.Tensor:
         # h_ts[i].shape = [features, hidden_size]
         h_ts = self._init_hidden(input_t.shape[0], self.hidden_sizes)
 
@@ -93,7 +93,7 @@ class Model(pl.LightningModule):
         # just take the last output
         return output
 
-    def configure_optimizers(self):
+    def configure_optimizers(self) -> optim.Optimizer:
         if self.optimizer == "adam":
             return optim.Adam(self.parameters(), lr=self.lr, amsgrad=True)
         elif self.optimizer == "rmsprop":
@@ -101,8 +101,11 @@ class Model(pl.LightningModule):
         elif self.optimizer == "sgd":
             return optim.SGD(self.parameters(), lr=self.lr, momentum=0.9, nesterov=True)
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx) -> torch.Tensor:
+        inputs: torch.Tensor
+        inputs = batch
         inputs, targets = batch
+
         predicted = self(inputs)
         loss = torch.nn.functional.cross_entropy(predicted, targets)
         accuracy = torchmetrics.functional.accuracy(
@@ -123,8 +126,11 @@ class Model(pl.LightningModule):
         self.training_step_f1.append(f1)
         return loss
 
-    def validation_step(self, batch, batch_idx):
+    def validation_step(self, batch, batch_idx) -> torch.Tensor:
+        inputs: torch.Tensor
+        inputs = batch
         inputs, targets = batch
+
         predicted = self(inputs)
         loss = torch.nn.functional.cross_entropy(predicted, targets)
         accuracy = torchmetrics.functional.accuracy(
@@ -145,8 +151,11 @@ class Model(pl.LightningModule):
         self.validation_step_f1.append(f1)
         return loss
 
-    def predict_step(self, batch, batch_idx):
+    def predict_step(self, batch, batch_idx) -> dict:
+        inputs: torch.Tensor
+        inputs = batch
         inputs, targets = batch
+
         predicted = self(inputs[0])
         loss = torch.nn.functional.cross_entropy(predicted, targets[0])
         accuracy = torchmetrics.functional.accuracy(
@@ -208,9 +217,9 @@ class Data(pl.LightningDataModule):
             if plot_data:
                 self.plot_data(self.thetas, self.ps, self.spectrum)
 
-        self.batch_size = params.get("batch_size")
-        self.shuffle_paths = params.get("shuffle_paths")
-        self.shuffle_batches = params.get("shuffle_batches")
+        self.batch_size: int = params.get("batch_size")
+        self.shuffle_paths: bool = params.get("shuffle_paths")
+        self.shuffle_batches: bool = params.get("shuffle_batches")
 
         self.rng = np.random.default_rng(seed=42)
 
@@ -242,41 +251,40 @@ class Data(pl.LightningDataModule):
                 )
             print()
 
-    def _make_input_output_pairs(self, data, spectrum):
+    def _make_input_output_pairs(self, data: np.ndarray, spectrum: list) -> list:
         return [
             (data[point], [1 - spectrum[point], spectrum[point]])
             for point in range(data.shape[0])
         ]
 
-    def train_dataloader(self):
+    def train_dataloader(self) -> DataLoader:
         return DataLoader(
             Dataset(self.train_data),
             batch_size=self.batch_size,
             shuffle=self.shuffle_batches,
         )
 
-    def val_dataloader(self):
+    def val_dataloader(self) -> DataLoader:
         return DataLoader(
             Dataset(self.val_data),
             batch_size=2 * self.batch_size,
             shuffle=False,
         )
 
-    def predict_dataloader(self):
+    def predict_dataloader(self) -> DataLoader:
         self.spectrum = [
             [1 - self.spectrum[point], self.spectrum[point]]
             for point in range(self.data.shape[0])
         ]
         return DataLoader(Dataset([(self.data, self.spectrum)]))
 
-    def _load_data(self, path, K_upper_lim, K_list):
-        directories = self._get_subdirectories(path, K_upper_lim, K_list)
-        bar_loader = tqdm(
-            directories, desc="Loading data", unit=" directories", ncols=80
-        )
+    def _load_data(
+        self, path: str, K_upper_lim: float, K_list: list[float] | float
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        directories: list[str] = self._get_subdirectories(path, K_upper_lim, K_list)
 
         thetas_list, ps_list, spectrum_list = [], [], []
-        for directory in bar_loader:
+        for directory in directories:
             temp_thetas = np.load(os.path.join(directory, "theta_values.npy"))
             temp_ps = np.load(os.path.join(directory, "p_values.npy"))
             temp_spectrum = np.load(os.path.join(directory, "spectrum.npy"))
@@ -291,7 +299,9 @@ class Data(pl.LightningDataModule):
 
         return thetas, ps, spectrum
 
-    def _get_subdirectories(self, directory, K_upper_lim, K_list):
+    def _get_subdirectories(
+        self, directory: str, K_upper_lim: float, K_list: list[float] | float
+    ) -> list[str]:
         subdirectories = []
         for d in os.listdir(directory):
             if os.path.isdir(os.path.join(directory, d)):
@@ -303,7 +313,9 @@ class Data(pl.LightningDataModule):
         subdirectories.sort()
         return subdirectories
 
-    def plot_data(self, thetas, ps, spectrum):
+    def plot_data(
+        self, thetas: np.ndarray, ps: np.ndarray, spectrum: np.ndarray
+    ) -> None:
         plt.figure(figsize=(7, 4))
         chaotic_indices = np.where(np.array(spectrum) == 1)[0]
         regular_indices = np.where(np.array(spectrum) == 0)[0]
@@ -389,13 +401,13 @@ class CustomCallback(pl.Callback):
 
 
 class Dataset(torch.utils.data.Dataset):
-    def __init__(self, data):
-        self.data = data
+    def __init__(self, data: np.ndarray):
+        self.data: np.ndarray = data
 
     def __len__(self):
         return len(self.data)
 
-    def __getitem__(self, idx):
+    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor]:
         x, y = self.data[idx]
         x = torch.tensor(x).to(torch.double)
         y = torch.tensor(y).to(torch.double)
@@ -403,12 +415,12 @@ class Dataset(torch.utils.data.Dataset):
 
 
 class Gridsearch:
-    def __init__(self, path, num_vertices):
-        self.path = path
-        self.grid_step = 1
-        self.num_vertices = num_vertices
+    def __init__(self, path: str, num_vertices: int):
+        self.path: str = path
+        self.grid_step: int = 1
+        self.num_vertices: int = num_vertices
 
-    def get_params(self):
+    def get_params(self) -> dict:
         with open(os.path.join(self.path, "parameters.yaml"), "r") as file:
             params = yaml.safe_load(file)
             if self.num_vertices > 0:
@@ -419,7 +431,7 @@ class Gridsearch:
 
         return params
 
-    def _update_params(self, params):
+    def _update_params(self, params) -> dict:
         rng = np.random.default_rng()
         for key, space in params.get("gridsearch").items():
             type = space.get("type")

@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+from typing import Tuple
 
 
 class StandardMap:
@@ -17,33 +18,33 @@ class StandardMap:
         seed: bool = None,
         n: int = None,
         params: dict = None,
-    ):
-        self.init_points = init_points or params.get("init_points")
-        self.steps = steps or params.get("steps")
-        self.K = K or params.get("K")
-        self.sampling = sampling or params.get("sampling")
+    ) -> None:
+        self.init_points: int = init_points or params.get("init_points")
+        self.steps: int = steps or params.get("steps")
+        self.K: float = K or params.get("K")
+        self.sampling: str = sampling or params.get("sampling")
 
-        self.rng = np.random.default_rng(seed=seed)
-        self.n = n
+        self.rng: np.random.Generator = np.random.default_rng(seed=seed)
+        self.n: int = n
         self.spectrum = np.array([])
 
-    def retrieve_data(self):
+    def retrieve_data(self) -> Tuple[np.ndarray, np.ndarray]:
         return self.theta_values, self.p_values
 
-    def retrieve_spectrum(self, binary: bool = False):
+    def retrieve_spectrum(self, binary: bool = False) -> np.ndarray:
         if binary:
             self.spectrum = (self.spectrum * 1e5 > 10).astype(int)
         return self.spectrum
 
-    def save_data(self, data_path):
+    def save_data(self, data_path: str) -> None:
         np.save(f"{data_path}/theta_values.npy", self.theta_values)
         np.save(f"{data_path}/p_values.npy", self.p_values)
         np.save(f"{data_path}/spectrum.npy", self.spectrum)
 
-    def generate_data(self, lyapunov: bool = False, n: int = 10**5):
-        n = self.n if self.n is not None else n
+    def generate_data(self, lyapunov: bool = False, n: int = 10**5) -> None:
+        n: int = self.n if self.n is not None else n
+        steps: int = n if lyapunov else self.steps
         theta, p = self._get_initial_points()
-        steps = n if lyapunov else self.steps
 
         self.theta_values = np.empty((steps, theta.shape[0]))
         self.p_values = np.empty((steps, p.shape[0]))
@@ -61,13 +62,13 @@ class StandardMap:
         self.p_values = self.p_values[: self.steps]
         self.lyapunov = lyapunov
 
-    def _jaccobi(self, row, column):
+    def _jaccobi(self, row: int, column: int) -> np.ndarray:
         der = self.K * np.cos(
             2 * np.pi * (self.theta_values[row, column] + self.p_values[row, column])
         )
         return np.array([[1, 1], [der, 1 + der]])
 
-    def _lyapunov(self, n, treshold=1e3):
+    def _lyapunov(self, n: int, treshold: int = 1e3) -> np.ndarray:
         spectrum = np.empty(self.theta_values.shape[1])
         for column in range(self.theta_values.shape[1]):
             M = np.identity(2)
@@ -88,8 +89,8 @@ class StandardMap:
 
         return spectrum
 
-    def _get_initial_points(self):
-        params = [0.01, 0.99, self.init_points]
+    def _get_initial_points(self) -> Tuple[np.ndarray, np.ndarray]:
+        params: list = [0.01, 0.99, self.init_points]
 
         if self.sampling == "random":
             theta_init = self.rng.uniform(*params)
@@ -110,11 +111,11 @@ class StandardMap:
 
         return theta_init, p_init
 
-    def plot_data(self):
+    def plot_data(self) -> None:
         plt.figure(figsize=(7, 4))
         if self.lyapunov:
-            chaotic_indices = np.where(self.spectrum == 1)[0]
-            regular_indices = np.where(self.spectrum == 0)[0]
+            chaotic_indices: np.ndarray[int] = np.where(self.spectrum == 1)[0]
+            regular_indices: np.ndarrray[int] = np.where(self.spectrum == 0)[0]
             plt.plot(
                 self.theta_values[:, chaotic_indices],
                 self.p_values[:, chaotic_indices],
@@ -142,17 +143,17 @@ class StandardMap:
 
 
 if __name__ == "__main__":
-    map = StandardMap(init_points=40, steps=500, sampling="random", K=1.0, seed=42)
-    map.generate_data(lyapunov=True)
-    map.plot_data()
+    # map = StandardMap(init_points=40, steps=500, sampling="random", K=1.0, seed=42)
+    # map.generate_data(lyapunov=True)
+    # map.plot_data()
 
-    # for K in np.arange(0.1, 2.1, 0.1):
-    #     K = round(K, 1)
-    #     path = "data2"
-    #     if str(K) not in os.listdir(path):
-    #         os.mkdir(f"{path}/{K}")
-    #         map = StandardMap(
-    #             init_points=2601, steps=1000, sampling="grid", K=K, seed=42
-    #         )
-    #         map.generate_data(lyapunov=True)
-    #         map.save_data(data_path=f"{path}/{K}")
+    for K in np.arange(0.1, 2.1, 0.1):
+        K = round(K, 1)
+        path = "testing_data"
+        if str(K) not in os.listdir(path):
+            os.mkdir(f"{path}/{K}")
+            map = StandardMap(
+                init_points=100, steps=1000, sampling="random", K=K, seed=42
+            )
+            map.generate_data(lyapunov=True)
+            map.save_data(data_path=f"{path}/{K}")
