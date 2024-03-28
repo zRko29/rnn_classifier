@@ -1,114 +1,110 @@
-# import os
-# from google.colab import drive
+from __future__ import annotations
+from typing import TYPE_CHECKING, List, Optional
 
-# drive.mount('/content/drive')
-# os.chdir("/content/drive/My Drive/Work")
+if TYPE_CHECKING:
+    from pytorch_lightning.callbacks import callbacks
+    from src.mapping_helper import StandardMap
 
-import pytorch_lightning as pl
-from pytorch_lightning import callbacks
+from pytorch_lightning import Trainer
 from pytorch_lightning.loggers import TensorBoardLogger
-from lightning.pytorch.profilers import SimpleProfiler
-import os
-
-from utils.helper import Model, Data, Gridsearch, CustomCallback
-
-import warnings
-
-warnings.filterwarnings(
-    "ignore", ".*Consider increasing the value of the `num_workers` argument*"
+from pytorch_lightning.callbacks import (
+    EarlyStopping,
+    ModelCheckpoint,
+    DeviceStatsMonitor,
 )
+
+from src.helper import Model, Data, Gridsearch, CustomCallback
+from src.utils import import_parsed_args, read_yaml, setup_logger, measure_time
+
+import os
+import warnings
+import logging
+from argparse import Namespace
+from time import sleep
+
+os.environ["GLOO_SOCKET_IFNAME"] = "en0"
 warnings.filterwarnings(
     "ignore",
-    ".*The number of training batches*",
+    module="pytorch_lightning",
 )
-
-import logging
-
 logging.getLogger("pytorch_lightning").setLevel(0)
 
-ROOT_DIR = os.getcwd()
-CONFIG_DIR = os.path.join(ROOT_DIR, "config")
 
-
-if __name__ == "__main__":
-    # necessary to continue training from checkpoint, else set to None
-    version: int | None = None
-    name: str = "classification_3"
-    num_vertices: int = 1
-
-    gridsearch: Gridsearch = Gridsearch(CONFIG_DIR, num_vertices)
-
-    for _ in range(num_vertices):
-        params: dict = gridsearch.get_params()
-
-        datamodule: Data = Data(
-            data_path="training_data",
-            # K_upper_lim=params.get("K_upper_lim"),
-            K_list=[0.1],
-            train_size=0.8,
-            plot_data=False,
-            print_split=False,
-            binary=True,
-            params=params,
-        )
-
-        model: Model = Model(**params)
-
-        logs_path: str = "logs"
-
-        # **************** callbacks ****************
-
-        tb_logger = TensorBoardLogger(logs_path, name=name, default_hp_metric=False)
-
-        save_path: str = os.path.join(
-            logs_path, name, "version_" + str(tb_logger.version)
-        )
-
-        print(f"Running version_{tb_logger.version}")
-        print()
-
-        checkpoint_callback = callbacks.ModelCheckpoint(
-            monitor="acc/val",  # careful
+def get_callbacks(save_path: str) -> List[callbacks]:
+    return [
+        ModelCheckpoint(
+            monitor="acc/val",
             mode="max",
             dirpath=save_path,
             filename="model",
             save_on_train_epoch_end=True,
-            save_top_k=1,
-            verbose=False,
-        )
-
-        early_stopping_callback = callbacks.EarlyStopping(
+        ),
+        EarlyStopping(
             monitor="acc/val",
             mode="max",
             min_delta=1e-4,
-            check_on_train_epoch_end=True,
-            patience=30,
-            verbose=False,
-        )
+            patience=350,
+        ),
+        # DeviceStatsMonitor(),
+        CustomCallback(print=False),
+    ]
 
-        gradient_avg_callback = callbacks.StochasticWeightAveraging(swa_lrs=1e-3)
 
-        progress_bar_callback = callbacks.TQDMProgressBar(refresh_rate=10)
+@measure_time
+def main(
+    args: Namespace,
+    params: dict,
+    sleep_time: int,
+    map_object: Optional[StandardMap] = None,
+) -> None:
+    sleep(sleep_time)
 
-        profiler_callback = SimpleProfiler(
-            dirpath=save_path, filename="profiler_report"
-        )
+    datamodule: Data = Data(
+        data_path="training_data",
+        train_size=0.8,
+        K=params.get("K"),
+        binary=True,
+        map_object=map_object,
+        params=params,
+    )
 
-        # **************** trainer ****************
+    model: Model = Model(**params)
 
-        trainer = pl.Trainer(
-            profiler=profiler_callback,
-            max_epochs=params.get("epochs"),
-            precision=params.get("precision"),
-            enable_progress_bar=True,
-            logger=tb_logger,
-            callbacks=[
-                checkpoint_callback,
-                # early_stopping_callback,
-                progress_bar_callback,
-                # gradient_avg_callback,
-                CustomCallback(),
-            ],
-        )
+    tb_logger = TensorBoardLogger(
+        save_dir="",
+        name=params.get("name"),
+        default_hp_metric=False,
+    )
 
-        trainer.fit(model=model, datamodule=datamodule, ckpt_path=None)
+    save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
+
+    trainer = Trainer(
+        max_epochs=params.get("epochs"),
+        precision=params.get("precision"),
+        logger=tb_logger,
+        callbacks=get_callbacks(save_path),
+        enable_progress_bar=args.progress_bar,
+        accelerator=args.accelerator,
+        devices=args.num_devices,
+        strategy=args.strategy,
+    )
+
+    trainer.fit(model, datamodule)
+    logger.info("Model trained.")
+
+
+if __name__ == "__main__":
+    args: Namespace = import_parsed_args("Autoregressor trainer")
+
+    params = read_yaml(args.params_dir)
+    del params["gridsearch"]
+
+    logs_dir = args.logs_dir or params["name"]
+
+    logger = setup_logger(logs_dir)
+    logger.info("Started trainer.py")
+    logger.info(f"{args.__dict__=}")
+
+    run_time = main(args, params, 0)
+
+    logger.info(f"Finished trainer.py in {run_time}.\n")
