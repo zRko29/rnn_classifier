@@ -125,7 +125,6 @@ class Model(pl.LightningModule):
             on_epoch=True,
             prog_bar=True,
             on_step=False,
-            sync_dist=False,
         )
         self.training_step_losses.append(loss)
         self.training_step_accs.append(accuracy)
@@ -150,7 +149,6 @@ class Model(pl.LightningModule):
             on_step=False,
             on_epoch=True,
             prog_bar=True,
-            sync_dist=False,
         )
         self.validation_step_losses.append(loss)
         self.validation_step_accs.append(accuracy)
@@ -188,14 +186,19 @@ class Data(pl.LightningDataModule):
         params: dict,
         binary: bool,
         plot_data: bool = False,
-        print_split: bool = False,
-        K: List[float] = None,
+        K: List[float] | float = None,
         train_size: float = 1.0,
         map_object=None,
         data_path=None,
         reduce_init_points=False,
     ):
         super(Data, self).__init__()
+        self.batch_size: int = params.get("batch_size")
+        self.shuffle_trajectories: bool = params.get("shuffle_trajectories")
+        self.shuffle_batches: bool = params.get("shuffle_batches")
+        self.rng = np.random.default_rng(seed=42)
+
+        # generate new data
         if map_object is not None:
             map_object.generate_data(lyapunov=True)
             self.thetas, self.ps = map_object.retrieve_data()
@@ -203,58 +206,45 @@ class Data(pl.LightningDataModule):
             if plot_data:
                 map_object.plot_data()
 
-        else:
-            if not isinstance(K, list):
-                K = [K]
-            thetas, ps, self.spectrum = self._load_data(data_path, K)
+        # load data
+        elif data_path is not None:
+            # NOTE: Training data: for each K, the shape of loaded data is (1000, 2601)
+            # NOTE: Test data: for each K, the shape of loaded data is (1000, 100)
+            self.thetas, self.ps, self.spectrum = self._load_data(data_path, K, binary)
+
+            # NOTE: loaded data contains redundant steps
             steps = params.get("steps")
-            # too many steps in saved data
-            self.thetas = thetas[:steps]
-            self.ps = ps[:steps]
-            if reduce_init_points:
-                self.thetas = self.thetas[:, : params.get("init_points")]
-                self.ps = self.ps[:, : params.get("init_points")]
-                self.spectrum = self.spectrum[: params.get("init_points")]
-            if binary:
-                self.spectrum = (self.spectrum * 1e5 > 10).astype(int)
+            self.thetas = self.thetas[:steps]
+            self.ps = self.ps[:steps]
+
             if plot_data:
                 self.plot_data(self.thetas, self.ps, self.spectrum)
-
-        self.batch_size: int = params.get("batch_size")
-        self.shuffle_paths: bool = params.get("shuffle_paths")
-        self.shuffle_batches: bool = params.get("shuffle_batches")
-
-        self.rng = np.random.default_rng(seed=42)
 
         # data.shape = [init_points, 2, steps]
         self.data = np.stack([self.thetas.T, self.ps.T], axis=1)
 
-        # first shuffle trajectories and then make sequences
-        if self.shuffle_paths:
+        # shuffle trajectories
+        # NOTE: This will shuffle trajectories across all K
+        if self.shuffle_trajectories:
             indices = np.arange(len(self.spectrum))
             self.rng.shuffle(indices)
             self.data = self.data[indices]
             self.spectrum = self.spectrum[indices]
 
-        xy_pairs = self._make_input_output_pairs(self.data, self.spectrum)
+            # NOTE: This will set the number of trajectories kept across all K,
+            # makes sense if data is shuffled
+            if reduce_init_points and data_path is not None:
+                max_points = params.get("max_points")
+                self.data = self.data[:max_points]
+                self.spectrum = self.spectrum[:max_points]
 
-        t = int(len(xy_pairs) * train_size)
-        self.train_data = xy_pairs[:t]
-        self.val_data = xy_pairs[t:]
-
-        if print_split:
-            print()
-            print(f"Data shape: {self.data.shape}")
-            print(
-                f"Train data shape: {len(self.train_data)} pairs of shape ({len(self.train_data[0][0][0])}, {1})"
-            )
-            if train_size < 1.0:
-                print(
-                    f"Validation data shape: {len(self.val_data)} pairs of shape ({len(self.val_data[0][0][0])}, {1})"
-                )
-            print()
+        self.input_output_pairs = self._make_input_output_pairs(
+            self.data, self.spectrum
+        )
+        self.t = int(len(self.input_output_pairs) * train_size)
 
     def _make_input_output_pairs(self, data: np.ndarray, spectrum: list) -> list:
+        # (trajectory, label)
         return [
             (data[point], [1 - spectrum[point], spectrum[point]])
             for point in range(data.shape[0])
@@ -262,47 +252,56 @@ class Data(pl.LightningDataModule):
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
-            Dataset(self.train_data),
+            Dataset(self.input_output_pairs[: self.t]),
             batch_size=self.batch_size,
             shuffle=self.shuffle_batches,
         )
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
-            Dataset(self.val_data),
+            Dataset(self.input_output_pairs[self.t :]),
             batch_size=2 * self.batch_size,
             shuffle=False,
         )
 
     def predict_dataloader(self) -> DataLoader:
-        self.spectrum = [
+        spectrum = [
             [1 - self.spectrum[point], self.spectrum[point]]
             for point in range(self.data.shape[0])
         ]
-        return DataLoader(Dataset([(self.data, self.spectrum)]))
+        return DataLoader(Dataset([(self.data, spectrum)]))
 
     def _load_data(
-        self, path: str, K: List[float] | float
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        self, path: str, K: List[float] | float, binary: bool
+    ) -> Tuple[np.ndarray]:
+        if not isinstance(K, list):
+            K = [K]
+
         directories: List[str] = self._get_subdirectories(path, K)
 
-        thetas_list, ps_list, spectrum_list = [], [], []
-        for directory in directories:
-            temp_thetas = np.load(os.path.join(directory, "theta_values.npy"))
-            temp_ps = np.load(os.path.join(directory, "p_values.npy"))
-            temp_spectrum = np.load(os.path.join(directory, "spectrum.npy"))
-
-            thetas_list.append(temp_thetas)
-            ps_list.append(temp_ps)
-            spectrum_list.append(temp_spectrum)
+        thetas_list = [
+            np.load(os.path.join(directory, "theta_values.npy"))
+            for directory in directories
+        ]
+        ps_list = [
+            np.load(os.path.join(directory, "p_values.npy"))
+            for directory in directories
+        ]
+        spectrum_list = [
+            np.load(os.path.join(directory, "spectrum.npy"))
+            for directory in directories
+        ]
 
         thetas = np.concatenate(thetas_list, axis=1)
         ps = np.concatenate(ps_list, axis=1)
         spectrum = np.concatenate(spectrum_list)
 
+        if binary:
+            spectrum = (spectrum * 1e5 > 10).astype(int)
+
         return thetas, ps, spectrum
 
-    def _get_subdirectories(self, directory: str, K: List[float] | float) -> List[str]:
+    def _get_subdirectories(self, directory: str, K: List[float]) -> List[str]:
         subdirectories = []
         for d in os.listdir(directory):
             if os.path.isdir(os.path.join(directory, d)):
@@ -343,9 +342,8 @@ class Data(pl.LightningDataModule):
 
 
 class CustomCallback(pl.Callback):
-    def __init__(self, print: bool) -> None:
+    def __init__(self) -> None:
         super(CustomCallback, self).__init__()
-        self.print = print
         self.min_train_loss = np.inf
         self.min_val_loss = np.inf
         self.max_train_acc = 0
@@ -366,19 +364,11 @@ class CustomCallback(pl.Callback):
         mean_loss = torch.stack(pl_module.training_step_losses).mean()
         if mean_loss < self.min_train_loss:
             self.min_train_loss = mean_loss
-            pl_module.log(
-                "metrics/min_train_loss",
-                mean_loss,
-                sync_dist=False,
-            )
+            pl_module.log("metrics/min_train_loss", mean_loss)
         mean_acc = torch.stack(pl_module.training_step_accs).mean()
         if mean_acc > self.max_train_acc:
             self.max_train_acc = mean_acc
-            pl_module.log(
-                "metrics/max_train_acc",
-                mean_acc,
-                sync_dist=False,
-            )
+            pl_module.log("metrics/max_train_acc", mean_acc)
         pl_module.training_step_losses.clear()
         pl_module.training_step_accs.clear()
 
@@ -386,36 +376,13 @@ class CustomCallback(pl.Callback):
         mean_loss = torch.stack(pl_module.validation_step_losses).mean()
         if mean_loss < self.min_val_loss:
             self.min_val_loss = mean_loss
-            pl_module.log(
-                "metrics/min_val_loss",
-                mean_loss,
-                sync_dist=False,
-            )
+            pl_module.log("metrics/min_val_loss", mean_loss)
         mean_acc = torch.stack(pl_module.validation_step_accs).mean()
         if mean_acc > self.max_val_acc:
             self.max_val_acc = mean_acc
-            pl_module.log(
-                "metrics/max_val_acc",
-                mean_acc,
-                sync_dist=False,
-            )
+            pl_module.log("metrics/max_val_acc", mean_acc)
         pl_module.validation_step_losses.clear()
         pl_module.validation_step_accs.clear()
-
-    def on_fit_start(self, trainer, pl_module):
-        if self.print:
-            print()
-            print("Training started!")
-            print()
-            self.t_start = time.time()
-
-    def on_fit_end(self, trainer, pl_module):
-        if self.print:
-            print()
-            print("Training ended!")
-            train_time = time.time() - self.t_start
-            print(f"Training time: {timedelta(seconds=train_time)}")
-            print()
 
 
 class Dataset(torch.utils.data.Dataset):
@@ -458,7 +425,8 @@ class Gridsearch:
 
     def _update_params(self, params) -> dict:
         # don't use any seed
-        rng: np.random.Generator = np.random.default_rng()
+        rng: np.random.Generator = np.random.default_rng(None)
+
         for key, space in params.get("gridsearch").items():
             type = space.get("type")
             if type == "int":
@@ -473,21 +441,5 @@ class Gridsearch:
                 params[key] = choice
             elif type == "float":
                 params[key] = rng.uniform(space["lower"], space["upper"])
-            # print(f"{key} = {params[key]}")
-
-        # to add variable layer size
-        # if "layers" in key:
-        #         num_layers = params[key]
-        #         space = space["layer_sizes"]
-        #         layer_type = space["layer_type"] + "_sizes"
-        #         params[layer_type] = []
-        #         for _ in range(num_layers):
-        #             layer_size = rng.integers(space["lower"], space["upper"] + 1)
-        #             params[layer_type].append(int(layer_size))
-        #             if not space["varied"]:
-        #                 params[layer_type][-1] = params[layer_type][0]
-        #         if layer_type == "lin_sizes":
-        #             params[layer_type] = params[layer_type][:-1]
-        # print(f"{layer_type}: {params[layer_type]}")
 
         return params

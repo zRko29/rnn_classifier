@@ -16,7 +16,7 @@ class StandardMap:
         K: float = None,
         sampling: str = None,
         seed: bool = None,
-        n: int = None,
+        n: int = 10**5,
         params: dict = None,
     ) -> None:
         self.init_points: int = init_points or params.get("init_points")
@@ -41,55 +41,65 @@ class StandardMap:
         np.save(f"{data_path}/p_values.npy", self.p_values)
         np.save(f"{data_path}/spectrum.npy", self.spectrum)
 
-    def generate_data(self, lyapunov: bool = False, n: int = 10**5) -> None:
-        n: int = self.n if self.n is not None else n
-        steps: int = n if lyapunov else self.steps
-        theta, p = self._get_initial_points()
+    def generate_data(self, lyapunov: bool = False) -> None:
+        steps: int = self.n if lyapunov else self.steps
+
+        # NOTE: returns data for one K, will be reused for all K
+        theta_i, p_i = self._get_initial_points()
 
         if not isinstance(self.K, list):
             K_list: List[float] = [self.K]
-        elif isinstance(self.K, list) and len(self.K) == 1:
-            K_list: List[float] = self.K
-        elif (
-            isinstance(self.K, list) and len(self.K) == 3 and isinstance(self.K[2], int)
-        ):
-            K_list: List[float] = np.linspace(self.K[0], self.K[1], self.K[2])
+        else:
+            if len(self.K) == 3 and isinstance(self.K[2], int):
+                K_list: List[float] = np.linspace(*self.K)
+            else:
+                K_list: List[float] = self.K
 
+        # shape: (steps, init_points * len(K_list))
         self.theta_values: np.ndarray = np.empty(
-            (self.steps, theta.shape[0] * len(K_list))
+            (steps, theta_i.shape[0] * len(K_list))
         )
-        self.p_values: np.ndarray = np.empty((self.steps, p.shape[0] * len(K_list)))
+        self.p_values: np.ndarray = np.empty((steps, p_i.shape[0] * len(K_list)))
 
         for i, K in enumerate(K_list):
-            for step in range(self.steps):
+            theta = theta_i.copy()
+            p = p_i.copy()
+            for step in range(steps):
                 theta = np.mod(theta + p, 1)
                 p = np.mod(p + K / (2 * np.pi) * np.sin(2 * np.pi * theta), 1)
                 self.theta_values[
-                    step, i * theta.shape[0] : (i + 1) * theta.shape[0]
+                    step, i * theta_i.shape[0] : (i + 1) * theta_i.shape[0]
                 ] = theta
-                self.p_values[step, i * p.shape[0] : (i + 1) * p.shape[0]] = p
+                self.p_values[step, i * p_i.shape[0] : (i + 1) * p_i.shape[0]] = p
 
         if lyapunov:
-            self.spectrum = self._lyapunov(n)
+            self.spectrum = self._lyapunov(K_list)
 
         self.theta_values = self.theta_values[: self.steps]
         self.p_values = self.p_values[: self.steps]
         self.lyapunov = lyapunov
 
-    def _jaccobi(self, row: int, column: int) -> np.ndarray:
-        der = self.K * np.cos(
+    def _jaccobi(self, row: int, column: int, K: float) -> np.ndarray:
+        der = K * np.cos(
             2 * np.pi * (self.theta_values[row, column] + self.p_values[row, column])
         )
         return np.array([[1, 1], [der, 1 + der]])
 
-    def _lyapunov(self, n: int, treshold: int = 1e3) -> np.ndarray:
+    def _lyapunov(self, K_list: List[float], treshold: int = 1e3) -> np.ndarray:
         spectrum = np.empty(self.theta_values.shape[1])
         for column in range(self.theta_values.shape[1]):
             M = np.identity(2)
             exp = np.zeros(2)
 
-            for row in range(n):
-                M = self._jaccobi(row, column) @ M
+            for row in range(self.n):
+                M = (
+                    self._jaccobi(
+                        row,
+                        column,
+                        K_list[column // self.init_points],
+                    )
+                    @ M
+                )
 
                 if np.linalg.norm(M) > treshold:
                     Q, R = np.linalg.qr(M)
@@ -99,21 +109,24 @@ class StandardMap:
             _, R = np.linalg.qr(M)
             exp += np.log(np.abs(R.diagonal()))
 
-            spectrum[column] = exp[0] / n
+            spectrum[column] = exp[0] / self.n
 
         return spectrum
 
     def _get_initial_points(self) -> Tuple[np.ndarray, np.ndarray]:
         params: List = [0.01, 0.99, self.init_points]
 
+        # sample randomly
         if self.sampling == "random":
             theta_init = self.rng.uniform(*params)
             p_init = self.rng.uniform(*params)
 
+        # sample on diagonal
         elif self.sampling == "linear":
             theta_init = np.linspace(*params)
             p_init = np.linspace(*params)
 
+        # sample on grid
         elif self.sampling == "grid":
             params = [0.01, 0.99, int(np.sqrt(self.init_points))]
             theta_init, p_init = np.meshgrid(np.linspace(*params), np.linspace(*params))
@@ -128,8 +141,9 @@ class StandardMap:
     def plot_data(self) -> None:
         plt.figure(figsize=(7, 4))
         if self.lyapunov:
-            chaotic_indices: np.ndarray[int] = np.where(self.spectrum == 1)[0]
-            regular_indices: np.ndarrray[int] = np.where(self.spectrum == 0)[0]
+            spectrum = self.retrieve_spectrum(binary=True)
+            chaotic_indices: np.ndarray[int] = np.where(spectrum == 1)[0]
+            regular_indices: np.ndarrray[int] = np.where(spectrum == 0)[0]
             plt.plot(
                 self.theta_values[:, chaotic_indices],
                 self.p_values[:, chaotic_indices],
@@ -157,17 +171,17 @@ class StandardMap:
 
 
 if __name__ == "__main__":
-    # map = StandardMap(init_points=40, steps=500, sampling="random", K=1.0, seed=42)
-    # map.generate_data(lyapunov=True)
-    # map.plot_data()
+    map = StandardMap(init_points=40, steps=500, sampling="random", K=1.0, seed=42)
+    map.generate_data(lyapunov=True)
+    map.plot_data()
 
-    for K in np.arange(0.1, 2.1, 0.1):
-        K = round(K, 1)
-        path = "testing_data"
-        if str(K) not in os.listdir(path):
-            os.mkdir(f"{path}/{K}")
-            map = StandardMap(
-                init_points=100, steps=1000, sampling="random", K=K, seed=42
-            )
-            map.generate_data(lyapunov=True)
-            map.save_data(data_path=f"{path}/{K}")
+    # for K in np.arange(0.1, 2.1, 0.1):
+    #     K = round(K, 1)
+    #     path = "testing_data"
+    #     if str(K) not in os.listdir(path):
+    #         os.mkdir(f"{path}/{K}")
+    #         map = StandardMap(
+    #             init_points=100, steps=1000, sampling="random", K=K, seed=42
+    #         )
+    #         map.generate_data(lyapunov=True)
+    #         map.save_data(data_path=f"{path}/{K}")

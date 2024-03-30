@@ -30,7 +30,7 @@ def main() -> None:
 
         params.update({"init_points": 30, "steps": 300})
 
-        K = [0.1, 0.2, 0.3, 0.5, 1.0, 1.5]
+        K = [0.1, 0.5, 1.0, 1.5]
 
         for idx, K in enumerate(K):
             datamodule: Data = Data(

@@ -1,5 +1,6 @@
-steps: 45 # ≤ 100
-K: 0.1
+init_points: 40 # how many points to take from loaded data
+steps: 45 # how many steps to take from loaded data
+K: 0.1 # list of values for StandardMap
 
 hidden_size: 32
 linear_size: 32 # used when num_lin_layers > 1
@@ -14,7 +15,7 @@ optimizer: adam
 lr: 0.0003
 precision: 32-true
 
-shuffle_paths: True # makes sense for linear sampling
+shuffle_trajectories: True # makes sense for linear sampling
 shuffle_batches: False # shuffle batches between epochs
 
 name: logs/overfitting_K=0.1/0
