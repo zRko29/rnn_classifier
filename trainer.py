@@ -85,7 +85,7 @@ def main(
         callbacks=get_callbacks(save_path),
         enable_progress_bar=args.progress_bar,
         accelerator=args.accelerator,
-        devices=args.num_devices,
+        devices=1,
         strategy=args.strategy,
     )
 
