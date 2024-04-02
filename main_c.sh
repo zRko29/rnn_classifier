@@ -11,4 +11,4 @@
 
 source ../rnn_generator_env/bin/activate
 
-python /rnn_classifier/optimize.py --optimization_steps 5 --models_per_step 10
+python optimize.py --optimization_steps 5 --models_per_step 10
