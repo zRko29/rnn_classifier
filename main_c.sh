@@ -9,6 +9,6 @@
 #SBATCH -o slurm.%N.%j.out        # STDOUT
 #SBATCH -e slurm.%N.%j.err        # STDERR
 
-source ../rnn_generator_env/bin/activate
+source rnn_generator_env/bin/activate
 
-python optimize.py --optimization_steps 5 --models_per_step 10
+python rnn_classifier/optimize.py --optimization_steps 5 --models_per_step 10
