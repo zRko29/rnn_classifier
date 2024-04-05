@@ -33,17 +33,17 @@ logging.getLogger("pytorch_lightning").setLevel(0)
 def get_callbacks(save_path: str) -> List[callbacks]:
     return [
         ModelCheckpoint(
-            monitor="acc/val",
-            mode="max",
+            monitor="loss/val",
+            mode="min",
             dirpath=save_path,
             filename="model",
             save_on_train_epoch_end=True,
         ),
         EarlyStopping(
-            monitor="acc/val",
-            mode="max",
-            min_delta=1e-4,
-            patience=350,
+            monitor="loss/val",
+            mode="min",
+            min_delta=1e-5,
+            patience=300,
         ),
         # DeviceStatsMonitor(),
         CustomCallback(),
