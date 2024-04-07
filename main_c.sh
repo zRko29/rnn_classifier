@@ -2,8 +2,8 @@
 #
 #SBATCH -p gpu                    # partition (queue)
 #SBATCH --qos=valhala
-#SBATCH -N 1                      # number of nodes
-#SBATCH --ntasks-per-node=10      # number of cores
+#SBATCH --nodes=1                 # number of nodes
+#SBATCH --ntasks-per-node=4       # number of cores
 #SBATCH --mem=10G                 # memory pool for all cores
 #SBATCH -t 1-00:00                # time (D-HH:MM)
 #SBATCH -o slurm.%N.%j.out        # STDOUT
@@ -13,4 +13,4 @@ source rnn_generator_env/bin/activate
 
 cd rnn_classifier
 
-python optimize.py --optimization_steps 5 --models_per_step 10
+srun python optimize.py --optimization_steps 15 --models_per_step 4 --num_devices 1 --accelerator gpu

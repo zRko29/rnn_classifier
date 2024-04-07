@@ -27,7 +27,7 @@ warnings.filterwarnings(
     "ignore",
     module="pytorch_lightning",
 )
-logging.getLogger("pytorch_lightning").setLevel(0)
+logging.getLogger("pytorch_lightning").setLevel("INFO")
 
 
 def get_callbacks(save_path: str) -> List[callbacks]:
@@ -55,6 +55,7 @@ def main(
     args: Namespace,
     params: dict,
     sleep_time: int,
+    logger: Optional[logging.Logger],
     map_object: Optional[StandardMap] = None,
 ) -> None:
     sleep(sleep_time)
@@ -85,7 +86,7 @@ def main(
         callbacks=get_callbacks(save_path),
         enable_progress_bar=args.progress_bar,
         accelerator=args.accelerator,
-        devices=1,
+        devices=args.strategy,
         strategy=args.strategy,
     )
 
@@ -105,6 +106,6 @@ if __name__ == "__main__":
     logger.info("Started trainer.py")
     logger.info(f"{args.__dict__=}")
 
-    run_time = main(args, params, 0)
+    run_time = main(args, params, 0, logger)
 
     logger.info(f"Finished trainer.py in {run_time}.\n")

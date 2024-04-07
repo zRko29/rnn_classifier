@@ -1,5 +1,6 @@
 from argparse import Namespace
 from joblib import Parallel, delayed
+import logging
 
 from trainer import main as train
 from update import main as update
@@ -10,7 +11,7 @@ from src.utils import measure_time, read_yaml, import_parsed_args, setup_logger
 
 
 @measure_time
-def main(args: Namespace) -> None:
+def main(args: Namespace, logger: logging.Logger) -> None:
     gridsearch = Gridsearch(args.params_dir, use_defaults=False)
     sleep_list = range(0, args.models_per_step * 5, 5)
 
@@ -27,14 +28,14 @@ def main(args: Namespace) -> None:
                 n_jobs=args.models_per_step,
                 verbose=11,
             )(
-                delayed(train)(args, params, sleep)
+                delayed(train)(args, params, sleep, logger)
                 for sleep, params in zip(sleep_list, gridsearch)
             )
         except Exception as e:
             logger.error(e)
             raise e
 
-        update(args)
+        update(args, logger)
         print()
         print(f"Finished optimization step: {i + 1} / {args.optimization_steps}")
         logger.info(f"Finished optimization step: {i + 1} / {args.optimization_steps}")
@@ -54,6 +55,6 @@ if __name__ == "__main__":
     logger.info("Started optimize.py")
     logger.info(f"{args.__dict__=}")
 
-    run_time = main(args)
+    run_time = main(args, logger)
 
     logger.info(f"Finished optimize.py in {run_time}.\n")

@@ -1,8 +1,8 @@
-import yaml
 from typing import Dict, Tuple, List
 import os
 import pandas as pd
 from argparse import Namespace
+import logging
 
 from src.utils import (
     read_yaml,
@@ -30,7 +30,7 @@ class Parameter:
             self.count = 0
 
 
-def get_loss_and_params(dir: str) -> pd.DataFrame:
+def get_loss_and_params(dir: str, logger: logging.Logger) -> pd.DataFrame:
     all_loss_hyperparams = []
     try:
         for directory in sorted(os.listdir(dir)):
@@ -56,7 +56,9 @@ def get_loss_and_params(dir: str) -> pd.DataFrame:
 
 
 def compute_parameter_intervals(
-    results: pd.DataFrame, args: Namespace
+    results: pd.DataFrame,
+    args: Namespace,
+    logger: logging.Logger,
 ) -> Dict[str, Tuple[float, float]]:
     gridsearch_params = read_yaml(args.params_dir)["gridsearch"]
 
@@ -147,11 +149,13 @@ def update_yaml_file(
 
 
 @measure_time
-def main(args: Namespace) -> None:
+def main(args: Namespace, logger: logging.Logger) -> None:
     events_dir = read_yaml(args.params_dir)["name"]
 
-    loss_and_params = get_loss_and_params(events_dir)
-    parameters = compute_parameter_intervals(results=loss_and_params, args=args)
+    loss_and_params = get_loss_and_params(events_dir, logger)
+    parameters = compute_parameter_intervals(
+        results=loss_and_params, args=args, logger=logger
+    )
 
     update_yaml_file(args, events_dir, parameters)
 
@@ -167,6 +171,6 @@ if __name__ == "__main__":
     logger.info("Started update.py")
     logger.info(f"{args.__dict__=}")
 
-    run_time = main(args)
+    run_time = main(args, logger)
 
     logger.info(f"Finished trainer.py in {run_time}.\n")
