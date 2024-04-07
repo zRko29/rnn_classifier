@@ -165,9 +165,7 @@ if __name__ == "__main__":
 
     params = read_yaml(args.params_dir)
 
-    logs_dir = args.logs_dir or params["name"]
-
-    logger = setup_logger(logs_dir)
+    logger = setup_logger(params["name"])
     logger.info("Started update.py")
     logger.info(f"{args.__dict__=}")
 
