@@ -79,8 +79,7 @@ def main(
 
     save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
 
-    print()
-    print(f"Started version_{tb_logger.version}")
+    logger.info(f"Started version_{tb_logger.version}")
 
     trainer = Trainer(
         max_epochs=params.get("epochs"),
