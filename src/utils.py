@@ -104,7 +104,7 @@ def import_parsed_args(script_name: str) -> Namespace:
     parser.add_argument(
         "--params_dir",
         type=str,
-        default="config/parameters.yaml",
+        default=/shared/mari/grandovecu/rnn_classifier/config/parameters.yaml",
         help="Directory containing parameter files. (default: %(default)s)",
     )
 
