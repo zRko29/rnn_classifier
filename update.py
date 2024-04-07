@@ -97,12 +97,12 @@ def compute_parameter_intervals(
 
     for param in parameters:
         if param.type == "float":
-            param.min = results[param.name].min()
-            param.max = results[param.name].max()
+            param.min = float(results[param.name].min())
+            param.max = float(results[param.name].max())
 
         elif param.type == "int":
-            param.min = results[param.name].min()
-            param.max = results[param.name].max()
+            param.min = int(results[param.name].min())
+            param.max = int(results[param.name].max())
 
         elif param.type == "choice":
             param.value_counts = results[param.name].value_counts().to_dict()
