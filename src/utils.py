@@ -142,6 +142,12 @@ def import_parsed_args(script_name: str) -> Namespace:
             choices=["auto", "ddp", "ddp_spawn"],
             help="Specify the training strategy. Choices are 'auto', 'ddp', or 'ddp_spawn'. (default: %(default)s)",
         )
+        parser.add_argument(
+            "--num_nodes",
+            type=int,
+            default=1,
+            help="Specify number of nodes to use. (default: 1)",
+        )
 
     if script_name in ["Parameter updater", "Hyperparameter optimizer"]:
         parser.add_argument(
