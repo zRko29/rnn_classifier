@@ -8,7 +8,7 @@ num_rnn_layers: 2
 num_lin_layers: 2
 dropout: 0.0
 
-epochs: 20
+epochs: 4000
 batch_size: 256
 loss: binary_crossentropy
 optimizer: adam
