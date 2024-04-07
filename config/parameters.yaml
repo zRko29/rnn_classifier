@@ -18,7 +18,7 @@ precision: 32-true
 shuffle_trajectories: True # makes sense for linear sampling
 shuffle_batches: False # shuffle batches between epochs
 
-name: logs/overfitting_K=0.1/0
+name: shared/mari/grandovecu/rnn_classifier/logs/overfitting_K=0.1/0
 
 gridsearch:
   batch_size: { lower: 100, upper: 300, type: int }
