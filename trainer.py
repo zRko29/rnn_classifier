@@ -101,12 +101,14 @@ def main(
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Autoregressor trainer")
 
+    args.params_dir = os.path.abspath(args.params_dir)
+
     params = read_yaml(args.params_dir)
     del params["gridsearch"]
 
-    logs_dir = args.logs_dir or params["name"]
+    params["name"] = os.path.abspath(params["name"])
 
-    logger = setup_logger(logs_dir)
+    logger = setup_logger(params["name"])
     logger.info("Started trainer.py")
     logger.info(f"{args.__dict__=}")
 

@@ -163,7 +163,11 @@ def main(args: Namespace, logger: logging.Logger) -> None:
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Parameter updater")
 
+    args.params_dir = os.path.abspath(args.params_dir)
+
     params = read_yaml(args.params_dir)
+
+    params["name"] = os.path.abspath(params["name"])
 
     logger = setup_logger(params["name"])
     logger.info("Started update.py")

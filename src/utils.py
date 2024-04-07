@@ -104,15 +104,8 @@ def import_parsed_args(script_name: str) -> Namespace:
     parser.add_argument(
         "--params_dir",
         type=str,
-        default="/shared/mari/grandovecu/rnn_classifier/config/parameters.yaml",
+        default="config/parameters.yaml",
         help="Directory containing parameter files. (default: %(default)s)",
-    )
-
-    parser.add_argument(
-        "--logs_dir",
-        type=str,
-        default=None,
-        help="File containing logs. (default: folder where trainer outputs are saved)",
     )
 
     if script_name in ["Autoregressor trainer", "Hyperparameter optimizer"]:

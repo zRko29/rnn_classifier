@@ -1,6 +1,7 @@
 from argparse import Namespace
 from joblib import Parallel, delayed
 import logging
+import os
 
 from trainer import main as train
 from update import main as update
@@ -46,12 +47,14 @@ def main(args: Namespace, logger: logging.Logger) -> None:
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Hyperparameter optimizer")
 
+    args.params_dir = os.path.abspath(args.params_dir)
+
     params = read_yaml(args.params_dir)
     del params["gridsearch"]
 
-    logs_dir = args.logs_dir or params["name"]
+    params["name"] = os.path.abspath(params["name"])
 
-    logger = setup_logger(logs_dir)
+    logger = setup_logger(params["name"])
     logger.info("Started optimize.py")
     logger.info(f"{args.__dict__=}")
 
