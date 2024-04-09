@@ -124,9 +124,9 @@ def import_parsed_args(script_name: str) -> Namespace:
             help="Specify the accelerator to use. Choices are 'auto', 'cpu', or 'gpu'. (default: %(default)s)",
         )
         parser.add_argument(
-            "--num_devices",
+            "--devices",
             default="auto",
-            help="Number of devices to use. (default: %(default)s)",
+            help="Number or list of devices to use. (default: %(default)s)",
         )
         parser.add_argument(
             "--strategy",

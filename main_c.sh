@@ -11,4 +11,4 @@
 
 source ../rnn_generator_env/bin/activate
 
-python optimize.py --optimization_steps 15 --models_per_step 4 --num_devices 1 --accelerator gpu
+python optimize.py --optimization_steps 15 --models_per_step 4 --devices 1 --accelerator gpu
