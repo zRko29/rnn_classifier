@@ -1,23 +1,20 @@
-import torch.optim as optim
-import pytorch_lightning as pl
 import torch
-import torchmetrics
+import torch.optim as optim
 from torch.utils.data import DataLoader
-import numpy as np
-import matplotlib.pyplot as plt
-import time
-from datetime import timedelta
-import os, yaml
-from typing import Tuple, List
 
-from src.utils import read_yaml
+import pytorch_lightning as pl
+from pytorch_lightning.utilities import rank_zero_only
+import torchmetrics
+
+import os
+import numpy as np
+from typing import Tuple, List, Dict
+
+from src.utils import read_yaml, plot_labeled_data
 
 
 class Model(pl.LightningModule):
-    def __init__(
-        self,
-        **params: dict,
-    ):
+    def __init__(self, **params):
         super(Model, self).__init__()
         self.save_hyperparameters()
 
@@ -35,13 +32,6 @@ class Model(pl.LightningModule):
         self.hidden_sizes: List[int] = [rnn_layer_size] * self.num_rnn_layers
         self.linear_sizes: List[int] = [lin_layer_size] * (self.num_lin_layers - 1)
         # ----------------------
-
-        self.training_step_losses = []
-        self.validation_step_losses = []
-        self.training_step_accs = []
-        self.validation_step_accs = []
-        self.training_step_f1 = []
-        self.validation_step_f1 = []
 
         # Create the RNN layers
         self.rnns = torch.nn.ModuleList([])
@@ -109,9 +99,11 @@ class Model(pl.LightningModule):
 
     def training_step(self, batch, batch_idx) -> torch.Tensor:
         inputs: torch.Tensor
+        targets: torch.Tensor
         inputs, targets = batch
 
         predicted = self(inputs)
+
         loss = torch.nn.functional.cross_entropy(predicted, targets)
         accuracy = torchmetrics.functional.accuracy(
             predicted.softmax(dim=1), targets, task="binary"
@@ -119,23 +111,22 @@ class Model(pl.LightningModule):
         f1 = torchmetrics.functional.f1_score(
             predicted.softmax(dim=1), targets, task="binary"
         )
-
         self.log_dict(
-            {"loss/train": loss, "acc/train": accuracy, "f1/train": f1},
+            {"loss/train": loss, "f1/train": f1},
             on_epoch=True,
             prog_bar=True,
             on_step=False,
         )
-        self.training_step_losses.append(loss)
-        self.training_step_accs.append(accuracy)
-        self.training_step_f1.append(f1)
+        self.log("acc/train", accuracy, on_epoch=True, prog_bar=False, on_step=False)
         return loss
 
     def validation_step(self, batch, batch_idx) -> torch.Tensor:
         inputs: torch.Tensor
+        targets: torch.Tensor
         inputs, targets = batch
 
         predicted = self(inputs)
+
         loss = torch.nn.functional.cross_entropy(predicted, targets)
         accuracy = torchmetrics.functional.accuracy(
             predicted.softmax(dim=1), targets, task="binary"
@@ -145,18 +136,17 @@ class Model(pl.LightningModule):
         )
 
         self.log_dict(
-            {"loss/val": loss, "acc/val": accuracy, "f1/val": f1},
-            on_step=False,
+            {"loss/val": loss, "f1/val": f1},
             on_epoch=True,
             prog_bar=True,
+            on_step=False,
         )
-        self.validation_step_losses.append(loss)
-        self.validation_step_accs.append(accuracy)
-        self.validation_step_f1.append(f1)
+        self.log("acc/val", accuracy, on_epoch=True, prog_bar=False, on_step=False)
         return loss
 
-    def predict_step(self, batch, batch_idx) -> dict:
+    def predict_step(self, batch, batch_idx) -> Dict[str, torch.Tensor]:
         inputs: torch.Tensor
+        targets: torch.Tensor
         inputs, targets = batch
 
         predicted = self(inputs[0])
@@ -179,15 +169,29 @@ class Model(pl.LightningModule):
             "predicted_labels": predicted_labels,
         }
 
+    @rank_zero_only
+    def on_train_start(self):
+        """
+        Required to add best_loss to hparams in logger.
+        """
+        self._trainer.logger.log_hyperparams(self.hparams, {"best_loss": np.inf})
+
+    def on_train_epoch_end(self):
+        """
+        Required to log best_loss at the end of the epoch. sync_dist=True is required to average the best_loss over all devices.
+        """
+        best_loss = self._trainer.callbacks[-1].best_model_score or np.inf
+        self.log("best_loss", best_loss, sync_dist=True)
+
 
 class Data(pl.LightningDataModule):
     def __init__(
         self,
         params: dict,
         binary: bool,
+        train_size: float,
         plot_data: bool = False,
         K: List[float] | float = None,
-        train_size: float = 1.0,
         map_object=None,
         data_path=None,
         reduce_init_points=False,
@@ -197,6 +201,9 @@ class Data(pl.LightningDataModule):
         self.shuffle_trajectories: bool = params.get("shuffle_trajectories")
         self.shuffle_batches: bool = params.get("shuffle_batches")
         self.rng = np.random.default_rng(seed=42)
+
+        self.thetas: np.ndarray
+        self.ps: np.ndarray
 
         # generate new data
         if map_object is not None:
@@ -218,7 +225,7 @@ class Data(pl.LightningDataModule):
             self.ps = self.ps[:steps]
 
             if plot_data:
-                self.plot_data(self.thetas, self.ps, self.spectrum)
+                plot_labeled_data(self.thetas, self.ps, self.spectrum)
 
         # data.shape = [init_points, 2, steps]
         self.data = np.stack([self.thetas.T, self.ps.T], axis=1)
@@ -231,8 +238,7 @@ class Data(pl.LightningDataModule):
             self.data = self.data[indices]
             self.spectrum = self.spectrum[indices]
 
-            # NOTE: This will set the number of trajectories kept across all K,
-            # makes sense if data is shuffled
+            # NOTE: This will set the number of trajectories kept across all K, makes sense if data is shuffled
             if reduce_init_points and data_path is not None:
                 max_points = params.get("max_points")
                 self.data = self.data[:max_points]
@@ -243,7 +249,7 @@ class Data(pl.LightningDataModule):
         )
         self.t = int(len(self.input_output_pairs) * train_size)
 
-    def _make_input_output_pairs(self, data: np.ndarray, spectrum: list) -> list:
+    def _make_input_output_pairs(self, data: np.ndarray, spectrum: list) -> List:
         # (trajectory, label)
         return [
             (data[point], [1 - spectrum[point], spectrum[point]])
@@ -297,7 +303,7 @@ class Data(pl.LightningDataModule):
         spectrum = np.concatenate(spectrum_list)
 
         if binary:
-            spectrum = (spectrum * 1e5 > 10).astype(int)
+            spectrum = (spectrum * 1e5 > 10.5).astype(int)
 
         return thetas, ps, spectrum
 
@@ -310,79 +316,6 @@ class Data(pl.LightningDataModule):
 
         subdirectories.sort()
         return subdirectories
-
-    def plot_data(
-        self, thetas: np.ndarray, ps: np.ndarray, spectrum: np.ndarray
-    ) -> None:
-        plt.figure(figsize=(7, 4))
-        chaotic_indices = np.where(np.array(spectrum) == 1)[0]
-        regular_indices = np.where(np.array(spectrum) == 0)[0]
-        plt.plot(
-            thetas[:, chaotic_indices],
-            ps[:, chaotic_indices],
-            "ro",
-            markersize=0.5,
-        )
-        plt.plot(
-            thetas[:, regular_indices],
-            ps[:, regular_indices],
-            "bo",
-            markersize=0.5,
-        )
-        legend_handles = [
-            plt.scatter([], [], color="red", marker=".", label="Chaotic"),
-            plt.scatter([], [], color="blue", marker=".", label="Regular"),
-        ]
-        plt.legend(handles=legend_handles)
-        plt.xlabel(r"$\theta$")
-        plt.ylabel("p")
-        plt.xlim(-0.05, 1.05)
-        plt.ylim(-0.05, 1.05)
-        plt.show()
-
-
-class CustomCallback(pl.Callback):
-    def __init__(self) -> None:
-        super(CustomCallback, self).__init__()
-        self.min_train_loss = np.inf
-        self.min_val_loss = np.inf
-        self.max_train_acc = 0
-        self.max_val_acc = 0
-
-    def on_train_start(self, trainer, pl_module):
-        trainer.logger.log_hyperparams(
-            pl_module.hparams,
-            {
-                "metrics/min_val_loss": np.inf,
-                "metrics/min_train_loss": np.inf,
-                "metrics/max_val_acc": 0,
-                "metrics/max_train_acc": 0,
-            },
-        )
-
-    def on_train_epoch_end(self, trainer, pl_module):
-        mean_loss = torch.stack(pl_module.training_step_losses).mean()
-        if mean_loss < self.min_train_loss:
-            self.min_train_loss = mean_loss
-            pl_module.log("metrics/min_train_loss", mean_loss)
-        mean_acc = torch.stack(pl_module.training_step_accs).mean()
-        if mean_acc > self.max_train_acc:
-            self.max_train_acc = mean_acc
-            pl_module.log("metrics/max_train_acc", mean_acc)
-        pl_module.training_step_losses.clear()
-        pl_module.training_step_accs.clear()
-
-    def on_validation_epoch_end(self, trainer, pl_module):
-        mean_loss = torch.stack(pl_module.validation_step_losses).mean()
-        if mean_loss < self.min_val_loss:
-            self.min_val_loss = mean_loss
-            pl_module.log("metrics/min_val_loss", mean_loss)
-        mean_acc = torch.stack(pl_module.validation_step_accs).mean()
-        if mean_acc > self.max_val_acc:
-            self.max_val_acc = mean_acc
-            pl_module.log("metrics/max_val_acc", mean_acc)
-        pl_module.validation_step_losses.clear()
-        pl_module.validation_step_accs.clear()
 
 
 class Dataset(torch.utils.data.Dataset):
@@ -397,49 +330,3 @@ class Dataset(torch.utils.data.Dataset):
         x = torch.tensor(x).to(torch.double)
         y = torch.tensor(y).to(torch.double)
         return x, y
-
-
-class Gridsearch:
-    def __init__(self, path: str, use_defaults: bool = False) -> None:
-        self.path = path
-        self.use_defaults = use_defaults
-
-    def __next__(self):
-        return self.update_params()
-
-    def __iter__(self):
-        for _ in range(10**3):
-            yield self.update_params()
-
-    def update_params(self) -> dict:
-        params = read_yaml(self.path)
-        if not self.use_defaults:
-            params = self._update_params(params)
-
-        try:
-            del params["gridsearch"]
-        except KeyError:
-            pass
-
-        return params
-
-    def _update_params(self, params) -> dict:
-        # don't use any seed
-        rng: np.random.Generator = np.random.default_rng(None)
-
-        for key, space in params.get("gridsearch").items():
-            type = space.get("type")
-            if type == "int":
-                params[key] = int(rng.integers(space["lower"], space["upper"] + 1))
-            elif type == "choice":
-                list = space.get("list")
-                choice = rng.choice(list)
-                try:
-                    choice = float(choice)
-                except:
-                    choice = str(choice)
-                params[key] = choice
-            elif type == "float":
-                params[key] = rng.uniform(space["lower"], space["upper"])
-
-        return params
