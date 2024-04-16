@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os
 from typing import Tuple, List
 
 
@@ -16,7 +15,7 @@ class StandardMap:
         K: float = None,
         sampling: str = None,
         seed: bool = None,
-        n: int = 10**5,
+        lyapunov_steps: int = 10**5,
         params: dict = None,
     ) -> None:
         self.init_points: int = init_points or params.get("init_points")
@@ -25,7 +24,7 @@ class StandardMap:
         self.sampling: str = sampling or params.get("sampling")
 
         self.rng: np.random.Generator = np.random.default_rng(seed=seed)
-        self.n: int = n
+        self.lyapunov_steps: int = lyapunov_steps
         self.spectrum = np.array([])
 
     def retrieve_data(self) -> Tuple[np.ndarray]:
@@ -42,9 +41,11 @@ class StandardMap:
         np.save(f"{data_path}/spectrum.npy", self.spectrum)
 
     def generate_data(self, lyapunov: bool = False) -> None:
-        steps: int = self.n if lyapunov else self.steps
+        steps: int = self.lyapunov_steps if lyapunov else self.steps
 
         # NOTE: returns data for one K, will be reused for all K
+        theta_i: np.ndarray
+        p_i: np.ndarray
         theta_i, p_i = self._get_initial_points()
 
         if not isinstance(self.K, list):
@@ -75,6 +76,7 @@ class StandardMap:
         if lyapunov:
             self.spectrum = self._lyapunov(K_list)
 
+        # reduce generated data
         self.theta_values = self.theta_values[: self.steps]
         self.p_values = self.p_values[: self.steps]
         self.lyapunov = lyapunov
@@ -91,7 +93,7 @@ class StandardMap:
             M = np.identity(2)
             exp = np.zeros(2)
 
-            for row in range(self.n):
+            for row in range(self.lyapunov_steps):
                 M = (
                     self._jaccobi(
                         row,
@@ -109,7 +111,7 @@ class StandardMap:
             _, R = np.linalg.qr(M)
             exp += np.log(np.abs(R.diagonal()))
 
-            spectrum[column] = exp[0] / self.n
+            spectrum[column] = exp[0] / self.lyapunov_steps
 
         return spectrum
 
@@ -133,9 +135,6 @@ class StandardMap:
             theta_init = theta_init.flatten()
             p_init = p_init.flatten()
 
-        else:
-            raise ValueError("Invalid sampling method")
-
         return theta_init, p_init
 
     def plot_data(self) -> None:
@@ -143,7 +142,7 @@ class StandardMap:
         if self.lyapunov:
             spectrum = self.retrieve_spectrum(binary=True)
             chaotic_indices: np.ndarray[int] = np.where(spectrum == 1)[0]
-            regular_indices: np.ndarrray[int] = np.where(spectrum == 0)[0]
+            regular_indices: np.ndarray[int] = np.where(spectrum == 0)[0]
             plt.plot(
                 self.theta_values[:, chaotic_indices],
                 self.p_values[:, chaotic_indices],
