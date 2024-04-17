@@ -72,7 +72,7 @@ def main(
         save_dir="", name=args.experiment_path, default_hp_metric=False
     )
 
-    save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
+    save_path: str = os.path.join(tb_logger.name, f"version_{tb_logger.version}")
 
     trainer = Trainer(
         max_epochs=args.epochs,
@@ -82,13 +82,13 @@ def main(
         deterministic=True,
         enable_progress_bar=args.progress_bar,
         accelerator=args.accelerator,
-        devices=args.devices,
+        devices=1,
         strategy=args.strategy,
         num_nodes=args.num_nodes,
     )
 
     if trainer.is_global_zero:
-        logger.info(f"Running trainer.py.")
+        logger.info(f"Running trainer.py (version_{tb_logger.version}).")
 
         print_args = args.__dict__.copy()
         del print_args["experiment_path"]
