@@ -1,29 +1,31 @@
+from argparse import Namespace
 import os
 from src.utils import (
-    read_yaml,
+    import_parsed_args,
     save_yaml,
     setup_logger,
     Gridsearch,
 )
 
 
-def main(params_dir: str) -> None:
-    params_path = os.path.join(params_dir, "parameters.yaml")
-    gridsearch = Gridsearch(params_path, use_defaults=False)
+def main(args: Namespace) -> None:
+    params_path = os.path.join(args.experiment_path, "parameters.yaml")
+    gridsearch = Gridsearch(params_path, use_defaults=args.default_params)
     updated_params = gridsearch.update_params()
 
-    save_yaml(updated_params, os.path.join(params_dir, "current_params.yaml"))
+    save_yaml(updated_params, os.path.join(args.experiment_path, "current_params.yaml"))
 
 
 if __name__ == "__main__":
-    params_dir = os.path.abspath("config")
+    args: Namespace = import_parsed_args("Gridsearch step")
 
-    params_path = os.path.join(params_dir, "parameters.yaml")
-    params = read_yaml(params_path)
+    args.experiment_path = os.path.abspath(args.experiment_path)
 
-    params["name"] = os.path.abspath(params["name"])
-
-    logger = setup_logger(params["name"])
+    logger = setup_logger(args.experiment_path)
     logger.info("Running gridsearch.py")
 
-    main(params_dir)
+    print_args = args.__dict__.copy()
+    del print_args["experiment_path"]
+    logger.info(f"args = {print_args}")
+
+    main(args)

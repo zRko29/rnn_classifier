@@ -84,7 +84,9 @@ def compute_new_parameter_intervals(
         )
         return None
     else:
-        logger.warning(f"Updating parameters.")
+        logger.warning(
+            f"Found {len(results)} (>= {args.min_good_samples}) good samples. Updating parameters."
+        )
 
     # ensures newer results at the bottom
     results = results.sort_values("directory", ascending=True)
@@ -92,6 +94,15 @@ def compute_new_parameter_intervals(
     # NOTE: ensures that older results, which set larger intervals, get deprecated, so that newer results can set smaller intervals
     results = results.tail(args.min_good_samples)
 
+    parameters = get_new_intervals(results, parameters)
+
+    return parameters
+
+
+def get_new_intervals(
+    results: pd.DataFrame,
+    parameters: List[Parameter],
+) -> List[Parameter]:
     for param in parameters:
         if param.type == "float":
             param.min = float(results[param.name].min())
@@ -112,10 +123,12 @@ def compute_new_parameter_intervals(
                     del dict_copy[key]
             param.value_counts = list(dict_copy.keys())
 
-    return parameters
 
-
-def update_yaml_file(params_path: str, parameters: List[Parameter]) -> None:
+def update_yaml_file(
+    params_path: str,
+    parameters: List[Parameter],
+    logger: logging.Logger,
+) -> None:
     if parameters is not None:
         gridsearch_dict = {}
         for param in parameters:
@@ -133,18 +146,22 @@ def update_yaml_file(params_path: str, parameters: List[Parameter]) -> None:
 
         yaml_params = read_yaml(params_path)
 
+        if yaml_params.get("gridsearch") == gridsearch_dict:
+            logger.info("Parameter intervals remained the same.")
+        else:
+            logger.info("Parameter intervals changed.")
+
         # update gridsearch parameters
         yaml_params["gridsearch"] = gridsearch_dict
 
         save_yaml(yaml_params, params_path)
 
 
-def main(args: Namespace, logger: logging.Logger, params_dir=str) -> None:
-    events_dir = params["name"]
+def main(args: Namespace, logger: logging.Logger) -> None:
+    params_path = os.path.join(args.experiment_path, "parameters.yaml")
 
-    loss_and_params = get_loss_and_params(events_dir, logger)
+    loss_and_params = get_loss_and_params(args.experiment_path, logger)
 
-    params_path = os.path.join(params_dir, "parameters.yaml")
     parameters = compute_new_parameter_intervals(
         results=loss_and_params,
         args=args,
@@ -152,24 +169,25 @@ def main(args: Namespace, logger: logging.Logger, params_dir=str) -> None:
         params_path=params_path,
     )
 
-    update_yaml_file(params_path, parameters)
+    update_yaml_file(params_path, parameters, logger)
 
 
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Parameter updater")
+    args.experiment_path = os.path.abspath(args.experiment_path)
+
+    logger = setup_logger(args.experiment_path)
+    logger.info("Running update.py")
 
     if args.current_step % args.check_every_n_steps != 0:
+        logger.warning("Skipping parameter update this step.")
         exit()
 
-    params_dir = os.path.abspath("config")
+    print_args = args.__dict__.copy()
+    del print_args["experiment_path"]
+    logger.info(f"args = {print_args}")
 
-    params_path = os.path.join(params_dir, "parameters.yaml")
+    params_path = os.path.join(args.experiment_path, "parameters.yaml")
     params = read_yaml(params_path)
 
-    params["name"] = os.path.abspath(params["name"])
-
-    logger = setup_logger(params["name"])
-    logger.info("Running update.py")
-    logger.info(f"args = {args.__dict__}")
-
-    main(args, logger, params_dir)
+    main(args, logger)

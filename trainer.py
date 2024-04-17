@@ -17,10 +17,10 @@ from pytorch_lightning.callbacks import (
 from src.helper import Model, Data
 from src.utils import import_parsed_args, read_yaml, setup_logger
 
+from argparse import Namespace
 import os
 import warnings
 import logging
-from argparse import Namespace
 
 os.environ["GLOO_SOCKET_IFNAME"] = "en0"
 warnings.filterwarnings(
@@ -43,7 +43,7 @@ def get_callbacks(args: Namespace, save_path: str) -> List[callbacks]:
         EarlyStopping(
             monitor=args.monitor,
             mode=args.mode,
-            min_delta=1e-8,
+            min_delta=1e-6,
             patience=400,
         ),
         # DeviceStatsMonitor(cpu_stats=False),
@@ -69,13 +69,7 @@ def main(
     model: Model = Model(**params)
 
     tb_logger = TensorBoardLogger(
-        save_dir="",
-        name=params.get("name"),
-        default_hp_metric=False,
-    )
-
-    tb_logger = TensorBoardLogger(
-        save_dir="", name=params.get("name"), default_hp_metric=False
+        save_dir="", name=args.experiment_path, default_hp_metric=False
     )
 
     save_path: str = os.path.join(tb_logger.name, "version_" + str(tb_logger.version))
@@ -95,21 +89,21 @@ def main(
 
     if trainer.is_global_zero:
         logger.info(f"Running trainer.py.")
-        logger.info(f"args = {args.__dict__}")
+
+        print_args = args.__dict__.copy()
+        del print_args["experiment_path"]
+        logger.info(f"args = {print_args}")
 
     trainer.fit(model, datamodule)
 
 
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Autoregressor trainer")
+    args.experiment_path = os.path.abspath(args.experiment_path)
 
-    params_dir = os.path.abspath("config")
+    logger = setup_logger(args.experiment_path)
 
-    params_path = os.path.join(params_dir, "current_params.yaml")
+    params_path = os.path.join(args.experiment_path, "current_params.yaml")
     params = read_yaml(params_path)
-
-    params["name"] = os.path.abspath(params["name"])
-
-    logger = setup_logger(params["name"])
 
     main(args, params, logger)
