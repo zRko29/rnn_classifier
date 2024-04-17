@@ -151,7 +151,22 @@ def plot_labeled_data(thetas: np.ndarray, ps: np.ndarray, spectrum: np.ndarray) 
 def import_parsed_args(script_name: str) -> Namespace:
     parser = ArgumentParser(prog=script_name)
 
-    if script_name == "Autoregressor trainer":
+    parser.add_argument(
+        "--experiment_path",
+        type=str,
+        default="logs/",
+        help="Path to the experiment directory. (default: %(default)s)",
+    )
+
+    if script_name == "Gridsearch step":
+        parser.add_argument(
+            "--default_params",
+            "-dflt",
+            action="store_true",
+            help="Use default parameters for the gridsearch. (default: False)",
+        )
+
+    elif script_name == "Autoregressor trainer":
         parser.add_argument(
             "--epochs",
             type=int,
@@ -184,16 +199,16 @@ def import_parsed_args(script_name: str) -> Namespace:
         )
         parser.add_argument(
             "--accelerator",
-            "-acc",
             type=str,
             default="auto",
+            choices=["auto", "cpu", "gpu"],
             help="Specify the accelerator to use. (default: %(default)s)",
         )
         parser.add_argument(
             "--devices",
-            default=1,
+            nargs="*",
             type=int,
-            help="Number or list of devices to use. (default: %(default)s)",
+            help="List of devices to use. (default: %(default)s)",
         )
         parser.add_argument(
             "--strategy",
@@ -205,14 +220,14 @@ def import_parsed_args(script_name: str) -> Namespace:
             "--num_nodes",
             type=int,
             default=1,
-            help="Specify number of nodes to use. (default: %(default)s)",
+            help="Specify number of nodes to use. (default: 1)",
         )
 
-    if script_name == "Parameter updater":
+    elif script_name == "Parameter updater":
         parser.add_argument(
             "--max_good_loss",
             type=float,
-            default=1e-4,
+            default=5e-6,
             help="Maximum loss value considered acceptable for selecting parameters. (default: %(default)s)",
         )
         parser.add_argument(
@@ -231,7 +246,7 @@ def import_parsed_args(script_name: str) -> Namespace:
             "--current_step",
             type=int,
             default=1,
-            help="Current step of the training. (default: %(default)s)",
+            help="Current step of the training. (default: None)",
         )
 
     return parser.parse_args()
