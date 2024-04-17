@@ -240,7 +240,7 @@ class Data(pl.LightningDataModule):
 
             # NOTE: This will set the number of trajectories kept across all K, makes sense if data is shuffled
             if reduce_init_points and data_path is not None:
-                max_points = params.get("max_points")
+                max_points = params.get("init_points")
                 self.data = self.data[:max_points]
                 self.spectrum = self.spectrum[:max_points]
 
@@ -251,10 +251,8 @@ class Data(pl.LightningDataModule):
 
     def _make_input_output_pairs(self, data: np.ndarray, spectrum: list) -> List:
         # (trajectory, label)
-        return [
-            (data[point], [1 - spectrum[point], spectrum[point]])
-            for point in range(data.shape[0])
-        ]
+        one_hot = self.one_hot_labels(spectrum)
+        return [(data[point], one_hot[point]) for point in range(data.shape[0])]
 
     def train_dataloader(self) -> DataLoader:
         return DataLoader(
@@ -271,11 +269,8 @@ class Data(pl.LightningDataModule):
         )
 
     def predict_dataloader(self) -> DataLoader:
-        spectrum = [
-            [1 - self.spectrum[point], self.spectrum[point]]
-            for point in range(self.data.shape[0])
-        ]
-        return DataLoader(Dataset([(self.data, spectrum)]))
+        one_hot = self.one_hot_labels(self.spectrum)
+        return DataLoader(Dataset([(self.data, one_hot)]))
 
     def _load_data(
         self, path: str, K: List[float] | float, binary: bool
@@ -316,6 +311,9 @@ class Data(pl.LightningDataModule):
 
         subdirectories.sort()
         return subdirectories
+
+    def one_hot_labels(self, spectrum: np.ndarray) -> np.ndarray:
+        return [[1 - point, point] for point in spectrum]
 
 
 class Dataset(torch.utils.data.Dataset):
