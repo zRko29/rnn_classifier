@@ -24,6 +24,11 @@ class Model(pl.LightningModule):
         self.lr: float = params.get("lr")
         self.optimizer: str = params.get("optimizer")
 
+        self.accuracy = torchmetrics.Accuracy(task="binary")
+        self.f1 = torchmetrics.F1Score(task="binary")
+        self.precision = torchmetrics.Precision(task="binary")
+        self.recall = torchmetrics.Recall(task="binary")
+
         # ----------------------
         # NOTE: This logic is kept so that variable layer sizes can be reimplemented in the future
         rnn_layer_size: int = params.get("hidden_size")
@@ -105,19 +110,24 @@ class Model(pl.LightningModule):
         predicted = self(inputs)
 
         loss = torch.nn.functional.cross_entropy(predicted, targets)
-        accuracy = torchmetrics.functional.accuracy(
-            predicted.softmax(dim=1), targets, task="binary"
-        )
-        f1 = torchmetrics.functional.f1_score(
-            predicted.softmax(dim=1), targets, task="binary"
-        )
+        normed_pred = predicted.softmax(dim=1)
+
+        accuracy = self.accuracy(normed_pred[:, 1], targets[:, 1])
+        f1 = self.f1(normed_pred[:, 1], targets[:, 1])
+        precision = self.precision(normed_pred[:, 1], targets[:, 1])
+        recall = self.recall(normed_pred[:, 1], targets[:, 1])
         self.log_dict(
             {"loss/train": loss, "f1/train": f1},
             on_epoch=True,
             prog_bar=True,
             on_step=False,
         )
-        self.log("acc/train", accuracy, on_epoch=True, prog_bar=False, on_step=False)
+        self.log_dict(
+            {"acc/train": accuracy, "prec/train": precision, "rec/train": recall},
+            on_epoch=True,
+            prog_bar=False,
+            on_step=False,
+        )
         return loss
 
     def validation_step(self, batch, batch_idx) -> torch.Tensor:
@@ -128,20 +138,24 @@ class Model(pl.LightningModule):
         predicted = self(inputs)
 
         loss = torch.nn.functional.cross_entropy(predicted, targets)
-        accuracy = torchmetrics.functional.accuracy(
-            predicted.softmax(dim=1), targets, task="binary"
-        )
-        f1 = torchmetrics.functional.f1_score(
-            predicted.softmax(dim=1), targets, task="binary"
-        )
+        normed_pred = predicted.softmax(dim=1)
 
+        accuracy = self.accuracy(normed_pred[:, 1], targets[:, 1])
+        f1 = self.f1(normed_pred[:, 1], targets[:, 1])
+        precision = self.precision(normed_pred[:, 1], targets[:, 1])
+        recall = self.recall(normed_pred[:, 1], targets[:, 1])
         self.log_dict(
             {"loss/val": loss, "f1/val": f1},
             on_epoch=True,
             prog_bar=True,
             on_step=False,
         )
-        self.log("acc/val", accuracy, on_epoch=True, prog_bar=False, on_step=False)
+        self.log_dict(
+            {"acc/val": accuracy, "prec/val": precision, "rec/val": recall},
+            on_epoch=True,
+            prog_bar=False,
+            on_step=False,
+        )
         return loss
 
     def predict_step(self, batch, batch_idx) -> Dict[str, torch.Tensor]:
@@ -150,17 +164,16 @@ class Model(pl.LightningModule):
         inputs, targets = batch
 
         predicted = self(inputs[0])
-        loss = torch.nn.functional.cross_entropy(predicted, targets[0])
-        accuracy = torchmetrics.functional.accuracy(
-            predicted.softmax(dim=1), targets[0], task="binary"
-        )
-        f1 = torchmetrics.functional.f1_score(
-            predicted.softmax(dim=1), targets[0], task="binary"
-        )
 
-        predicted_labels = [
-            1 - torch.round(pred_prob[0]) for pred_prob in predicted.softmax(dim=1)
-        ]
+        loss = torch.nn.functional.cross_entropy(predicted, targets[0])
+        normed_pred = predicted.softmax(dim=1)
+
+        accuracy = self.accuracy(normed_pred[:, 1], targets[0][:, 1])
+        f1 = self.f1(normed_pred[:, 1], targets[0][:, 1])
+        # precision = self.precision(normed_pred[:, 1], targets[0][:, 1])
+        # recall = self.recall(normed_pred[:, 1], targets[0][:, 1])
+
+        predicted_labels = [1 - torch.round(pred_prob[0]) for pred_prob in normed_pred]
 
         return {
             "loss": loss,
@@ -227,11 +240,11 @@ class Data(pl.LightningDataModule):
             if plot_data:
                 plot_labeled_data(self.thetas, self.ps, self.spectrum)
 
-        # data.shape = [init_points, 2, steps]
+        # data.shape = [init_points * len(K), 2, steps]
         self.data = np.stack([self.thetas.T, self.ps.T], axis=1)
 
         # shuffle trajectories
-        # NOTE: This will shuffle trajectories across all K
+        # NOTE: This will shuffle trajectories between different K
         if self.shuffle_trajectories:
             indices = np.arange(len(self.spectrum))
             self.rng.shuffle(indices)

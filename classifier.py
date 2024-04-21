@@ -1,7 +1,7 @@
 import os
 import pytorch_lightning as pl
 from src.helper import Model, Data
-from src.utils import read_yaml, get_inference_folders
+from src.utils import read_yaml, get_inference_folders, plot_labeled_data
 from typing import List, Optional
 
 import warnings
@@ -17,7 +17,7 @@ pl.seed_everything(42, workers=True)
 
 def main() -> None:
     version: Optional[int] = 0
-    name: str = "overfitting_K=0.1"
+    name: str = "overfitting_K=2.0"
 
     directory_path: str = f"logs/{name}"
 
@@ -56,7 +56,7 @@ def main() -> None:
 
             predictions: dict = trainer.predict(model=model, dataloaders=datamodule)[0]
 
-            datamodule.plot_labeled_data(
+            plot_labeled_data(
                 datamodule.thetas,
                 datamodule.ps,
                 predictions["predicted_labels"],
