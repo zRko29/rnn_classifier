@@ -5,7 +5,7 @@
 #SBATCH --nodes=1                       # number of nodes
 #SBATCH --ntasks-per-node=1             # number of cores
 #SBATCH --mem=24G                       # memory per node
-#SBATCH --time=1-00:00                  # time (D-HH:MM)
+#SBATCH --time=3-00:00                  # time (D-HH:MM)
 #SBATCH --output=slurm.%N.%j.out        # STDOUT
 #SBATCH --error=slurm.%N.%j.err         # STDERR
 
@@ -31,7 +31,7 @@ do
     python gridsearch.py --experiment_path $experiment
     
     echo "Running trainer."
-    srun python trainer.py --num_nodes 1 --devices 0 --train_size 1.0 --epochs 4000 --experiment_path $experiment
+    srun python trainer.py --num_nodes 1 --devices 0 --train_size 1.0 --epochs 4500 --experiment_path $experiment
     
     echo "Updating parameter intervals."
     python update.py --min_good_samples 4 --max_good_loss 1e-4 --check_every_n_steps 3 --current_step $i --experiment_path $experiment

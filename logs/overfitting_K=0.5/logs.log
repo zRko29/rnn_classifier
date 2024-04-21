@@ -1,0 +1,256 @@
+2024-04-18 11:47:28,219 - INFO - Running gridsearch.py
+2024-04-18 11:47:28,219 - INFO - args = {'default_params': False}
+2024-04-18 11:47:32,086 - INFO - Running trainer.py (version_0).
+2024-04-18 11:47:32,086 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-18 12:03:22,766 - INFO - Running update.py
+2024-04-18 12:03:22,766 - WARNING - Skipping parameter update this step.
+2024-04-18 12:03:25,424 - INFO - Running gridsearch.py
+2024-04-18 12:03:25,424 - INFO - args = {'default_params': False}
+2024-04-18 12:03:29,499 - INFO - Running trainer.py (version_1).
+2024-04-18 12:03:29,499 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-18 12:28:32,163 - INFO - Running update.py
+2024-04-18 12:28:32,163 - WARNING - Skipping parameter update this step.
+2024-04-18 12:28:35,066 - INFO - Running gridsearch.py
+2024-04-18 12:28:35,066 - INFO - args = {'default_params': False}
+2024-04-18 12:28:39,131 - INFO - Running trainer.py (version_2).
+2024-04-18 12:28:39,132 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-18 13:52:25,522 - INFO - Running update.py
+2024-04-18 13:52:25,522 - INFO - args = {'max_good_loss': 0.0001, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 3}
+2024-04-18 13:52:26,085 - WARNING - Found 1 (< 4) good samples. Parameters will not be updated.
+2024-04-18 13:52:28,926 - INFO - Running gridsearch.py
+2024-04-18 13:52:28,927 - INFO - args = {'default_params': False}
+2024-04-18 13:52:33,028 - INFO - Running trainer.py (version_3).
+2024-04-18 13:52:33,028 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-18 14:07:31,019 - INFO - Running update.py
+2024-04-18 14:07:31,019 - WARNING - Skipping parameter update this step.
+2024-04-18 14:07:33,848 - INFO - Running gridsearch.py
+2024-04-18 14:07:33,848 - INFO - args = {'default_params': False}
+2024-04-18 14:07:38,812 - INFO - Running trainer.py (version_4).
+2024-04-18 14:07:38,812 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-18 16:42:04,600 - INFO - Running update.py
+2024-04-18 16:42:04,600 - WARNING - Skipping parameter update this step.
+2024-04-18 16:42:07,521 - INFO - Running gridsearch.py
+2024-04-18 16:42:07,521 - INFO - args = {'default_params': False}
+2024-04-18 16:42:11,657 - INFO - Running trainer.py (version_5).
+2024-04-18 16:42:11,658 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-18 17:58:51,862 - INFO - Running update.py
+2024-04-18 17:58:51,863 - INFO - args = {'max_good_loss': 0.0001, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 6}
+2024-04-18 17:58:53,305 - WARNING - Found 2 (< 4) good samples. Parameters will not be updated.
+2024-04-18 17:58:56,089 - INFO - Running gridsearch.py
+2024-04-18 17:58:56,089 - INFO - args = {'default_params': False}
+2024-04-18 17:59:00,210 - INFO - Running trainer.py (version_6).
+2024-04-18 17:59:00,211 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-18 18:34:47,729 - INFO - Running update.py
+2024-04-18 18:34:47,729 - WARNING - Skipping parameter update this step.
+2024-04-18 18:34:50,585 - INFO - Running gridsearch.py
+2024-04-18 18:34:50,585 - INFO - args = {'default_params': False}
+2024-04-18 18:34:54,550 - INFO - Running trainer.py (version_7).
+2024-04-18 18:34:54,550 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-18 19:53:47,102 - INFO - Running update.py
+2024-04-18 19:53:47,102 - WARNING - Skipping parameter update this step.
+2024-04-18 19:53:49,941 - INFO - Running gridsearch.py
+2024-04-18 19:53:49,941 - INFO - args = {'default_params': False}
+2024-04-18 19:53:53,936 - INFO - Running trainer.py (version_8).
+2024-04-18 19:53:53,936 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-18 20:28:47,540 - INFO - Running update.py
+2024-04-18 20:28:47,540 - INFO - args = {'max_good_loss': 0.0001, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 9}
+2024-04-18 20:28:49,370 - WARNING - Found 2 (< 4) good samples. Parameters will not be updated.
+2024-04-18 20:28:52,207 - INFO - Running gridsearch.py
+2024-04-18 20:28:52,207 - INFO - args = {'default_params': False}
+2024-04-18 20:28:56,234 - INFO - Running trainer.py (version_9).
+2024-04-18 20:28:56,234 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-18 20:50:38,730 - INFO - Running update.py
+2024-04-18 20:50:38,730 - WARNING - Skipping parameter update this step.
+2024-04-18 20:50:41,474 - INFO - Running gridsearch.py
+2024-04-18 20:50:41,475 - INFO - args = {'default_params': False}
+2024-04-18 20:50:45,438 - INFO - Running trainer.py (version_10).
+2024-04-18 20:50:45,438 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-18 23:42:05,544 - INFO - Running update.py
+2024-04-18 23:42:05,544 - WARNING - Skipping parameter update this step.
+2024-04-18 23:42:08,377 - INFO - Running gridsearch.py
+2024-04-18 23:42:08,378 - INFO - args = {'default_params': False}
+2024-04-18 23:42:12,556 - INFO - Running trainer.py (version_11).
+2024-04-18 23:42:12,556 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 01:16:28,483 - INFO - Running update.py
+2024-04-19 01:16:28,483 - INFO - args = {'max_good_loss': 0.0001, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 12}
+2024-04-19 01:16:31,203 - WARNING - Found 3 (< 4) good samples. Parameters will not be updated.
+2024-04-19 01:16:33,917 - INFO - Running gridsearch.py
+2024-04-19 01:16:33,917 - INFO - args = {'default_params': False}
+2024-04-19 01:16:37,939 - INFO - Running trainer.py (version_12).
+2024-04-19 01:16:37,939 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 01:27:25,868 - INFO - Running update.py
+2024-04-19 01:27:25,868 - WARNING - Skipping parameter update this step.
+2024-04-19 01:27:28,746 - INFO - Running gridsearch.py
+2024-04-19 01:27:28,747 - INFO - args = {'default_params': False}
+2024-04-19 01:27:32,914 - INFO - Running trainer.py (version_13).
+2024-04-19 01:27:32,914 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 01:49:20,748 - INFO - Running update.py
+2024-04-19 01:49:20,748 - WARNING - Skipping parameter update this step.
+2024-04-19 01:49:23,617 - INFO - Running gridsearch.py
+2024-04-19 01:49:23,617 - INFO - args = {'default_params': False}
+2024-04-19 01:49:27,836 - INFO - Running trainer.py (version_14).
+2024-04-19 01:49:27,836 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 03:19:07,941 - INFO - Running update.py
+2024-04-19 03:19:07,941 - INFO - args = {'max_good_loss': 0.0001, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 15}
+2024-04-19 03:19:11,184 - WARNING - Found 4 (>= 4) good samples. Updating parameters.
+2024-04-19 03:19:11,188 - INFO - Parameter intervals changed.
+2024-04-19 03:19:13,988 - INFO - Running gridsearch.py
+2024-04-19 03:19:13,988 - INFO - args = {'default_params': False}
+2024-04-19 03:19:18,035 - INFO - Running trainer.py (version_15).
+2024-04-19 03:19:18,035 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 10:29:26,640 - INFO - Running update.py
+2024-04-19 10:29:26,640 - WARNING - Skipping parameter update this step.
+2024-04-19 10:29:29,488 - INFO - Running gridsearch.py
+2024-04-19 10:29:29,488 - INFO - args = {'default_params': False}
+2024-04-19 10:29:36,081 - INFO - Running trainer.py (version_16).
+2024-04-19 10:29:36,081 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 10:53:10,257 - INFO - Running update.py
+2024-04-19 10:53:10,257 - WARNING - Skipping parameter update this step.
+2024-04-19 10:53:13,244 - INFO - Running gridsearch.py
+2024-04-19 10:53:13,244 - INFO - args = {'default_params': False}
+2024-04-19 10:53:17,617 - INFO - Running trainer.py (version_17).
+2024-04-19 10:53:17,617 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 11:55:40,490 - INFO - Running gridsearch.py
+2024-04-19 11:55:40,490 - INFO - args = {'default_params': False}
+2024-04-19 11:55:44,424 - INFO - Running trainer.py (version_18).
+2024-04-19 11:55:44,425 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 12:31:09,118 - INFO - Running update.py
+2024-04-19 12:31:09,118 - WARNING - Skipping parameter update this step.
+2024-04-19 12:31:11,995 - INFO - Running gridsearch.py
+2024-04-19 12:31:11,995 - INFO - args = {'default_params': False}
+2024-04-19 12:31:15,966 - INFO - Running trainer.py (version_19).
+2024-04-19 12:31:15,966 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 13:05:52,704 - INFO - Running update.py
+2024-04-19 13:05:52,704 - WARNING - Skipping parameter update this step.
+2024-04-19 13:05:55,529 - INFO - Running gridsearch.py
+2024-04-19 13:05:55,529 - INFO - args = {'default_params': False}
+2024-04-19 13:05:59,543 - INFO - Running trainer.py (version_20).
+2024-04-19 13:05:59,543 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 13:58:12,195 - INFO - Running update.py
+2024-04-19 13:58:12,195 - INFO - args = {'max_good_loss': 0.0001, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 3}
+2024-04-19 13:58:16,771 - WARNING - Found 6 (>= 4) good samples. Updating parameters.
+2024-04-19 13:58:16,775 - INFO - Parameter intervals changed.
+2024-04-19 13:58:19,588 - INFO - Running gridsearch.py
+2024-04-19 13:58:19,589 - INFO - args = {'default_params': False}
+2024-04-19 13:58:23,643 - INFO - Running trainer.py (version_21).
+2024-04-19 13:58:23,644 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 14:45:37,734 - INFO - Running update.py
+2024-04-19 14:45:37,734 - WARNING - Skipping parameter update this step.
+2024-04-19 14:45:40,457 - INFO - Running gridsearch.py
+2024-04-19 14:45:40,458 - INFO - args = {'default_params': False}
+2024-04-19 14:45:44,418 - INFO - Running trainer.py (version_22).
+2024-04-19 14:45:44,418 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 15:45:46,543 - INFO - Running update.py
+2024-04-19 15:45:46,543 - WARNING - Skipping parameter update this step.
+2024-04-19 15:45:49,263 - INFO - Running gridsearch.py
+2024-04-19 15:45:49,263 - INFO - args = {'default_params': False}
+2024-04-19 15:45:53,175 - INFO - Running trainer.py (version_23).
+2024-04-19 15:45:53,175 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 17:04:51,512 - INFO - Running update.py
+2024-04-19 17:04:51,512 - INFO - args = {'max_good_loss': 0.0001, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 6}
+2024-04-19 17:04:56,819 - WARNING - Found 9 (>= 4) good samples. Updating parameters.
+2024-04-19 17:04:56,822 - INFO - Parameter intervals changed.
+2024-04-19 17:04:59,617 - INFO - Running gridsearch.py
+2024-04-19 17:04:59,617 - INFO - args = {'default_params': False}
+2024-04-19 17:05:03,636 - INFO - Running trainer.py (version_24).
+2024-04-19 17:05:03,636 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 18:34:31,110 - INFO - Running update.py
+2024-04-19 18:34:31,110 - WARNING - Skipping parameter update this step.
+2024-04-19 18:34:33,935 - INFO - Running gridsearch.py
+2024-04-19 18:34:33,935 - INFO - args = {'default_params': False}
+2024-04-19 18:34:37,989 - INFO - Running trainer.py (version_25).
+2024-04-19 18:34:37,990 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 20:11:22,770 - INFO - Running update.py
+2024-04-19 20:11:22,770 - WARNING - Skipping parameter update this step.
+2024-04-19 20:11:25,528 - INFO - Running gridsearch.py
+2024-04-19 20:11:25,529 - INFO - args = {'default_params': False}
+2024-04-19 20:11:29,417 - INFO - Running trainer.py (version_26).
+2024-04-19 20:11:29,417 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 21:16:05,418 - INFO - Running update.py
+2024-04-19 21:16:05,418 - INFO - args = {'max_good_loss': 0.0001, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 9}
+2024-04-19 21:16:11,489 - WARNING - Found 12 (>= 4) good samples. Updating parameters.
+2024-04-19 21:16:11,493 - INFO - Parameter intervals changed.
+2024-04-19 21:16:14,332 - INFO - Running gridsearch.py
+2024-04-19 21:16:14,332 - INFO - args = {'default_params': False}
+2024-04-19 21:16:18,349 - INFO - Running trainer.py (version_27).
+2024-04-19 21:16:18,349 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 22:20:49,272 - INFO - Running update.py
+2024-04-19 22:20:49,272 - WARNING - Skipping parameter update this step.
+2024-04-19 22:20:52,048 - INFO - Running gridsearch.py
+2024-04-19 22:20:52,048 - INFO - args = {'default_params': False}
+2024-04-19 22:20:56,118 - INFO - Running trainer.py (version_28).
+2024-04-19 22:20:56,118 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-19 23:11:15,212 - INFO - Running update.py
+2024-04-19 23:11:15,212 - WARNING - Skipping parameter update this step.
+2024-04-19 23:11:17,974 - INFO - Running gridsearch.py
+2024-04-19 23:11:17,974 - INFO - args = {'default_params': False}
+2024-04-19 23:11:21,960 - INFO - Running trainer.py (version_29).
+2024-04-19 23:11:21,960 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-20 00:32:17,501 - INFO - Running update.py
+2024-04-20 00:32:17,501 - INFO - args = {'max_good_loss': 0.0001, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 12}
+2024-04-20 00:32:24,274 - WARNING - Found 15 (>= 4) good samples. Updating parameters.
+2024-04-20 00:32:24,278 - INFO - Parameter intervals changed.
+2024-04-20 00:32:27,090 - INFO - Running gridsearch.py
+2024-04-20 00:32:27,090 - INFO - args = {'default_params': False}
+2024-04-20 00:32:31,074 - INFO - Running trainer.py (version_30).
+2024-04-20 00:32:31,075 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-20 01:21:50,606 - INFO - Running update.py
+2024-04-20 01:21:50,606 - WARNING - Skipping parameter update this step.
+2024-04-20 01:21:53,435 - INFO - Running gridsearch.py
+2024-04-20 01:21:53,435 - INFO - args = {'default_params': False}
+2024-04-20 01:21:57,429 - INFO - Running trainer.py (version_31).
+2024-04-20 01:21:57,429 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-20 02:09:10,261 - INFO - Running update.py
+2024-04-20 02:09:10,261 - WARNING - Skipping parameter update this step.
+2024-04-20 02:09:13,085 - INFO - Running gridsearch.py
+2024-04-20 02:09:13,085 - INFO - args = {'default_params': False}
+2024-04-20 02:09:17,100 - INFO - Running trainer.py (version_32).
+2024-04-20 02:09:17,100 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-20 03:16:14,613 - INFO - Running update.py
+2024-04-20 03:16:14,613 - INFO - args = {'max_good_loss': 0.0001, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 15}
+2024-04-20 03:16:22,186 - WARNING - Found 17 (>= 4) good samples. Updating parameters.
+2024-04-20 03:16:22,190 - INFO - Parameter intervals changed.
+2024-04-20 03:16:24,863 - INFO - Running gridsearch.py
+2024-04-20 03:16:24,863 - INFO - args = {'default_params': False}
+2024-04-20 03:16:28,662 - INFO - Running trainer.py (version_33).
+2024-04-20 03:16:28,662 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-20 04:21:35,436 - INFO - Running update.py
+2024-04-20 04:21:35,436 - WARNING - Skipping parameter update this step.
+2024-04-20 04:21:38,235 - INFO - Running gridsearch.py
+2024-04-20 04:21:38,235 - INFO - args = {'default_params': False}
+2024-04-20 04:21:42,175 - INFO - Running trainer.py (version_34).
+2024-04-20 04:21:42,175 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-20 05:32:49,875 - INFO - Running update.py
+2024-04-20 05:32:49,876 - WARNING - Skipping parameter update this step.
+2024-04-20 05:32:52,668 - INFO - Running gridsearch.py
+2024-04-20 05:32:52,668 - INFO - args = {'default_params': False}
+2024-04-20 05:32:56,530 - INFO - Running trainer.py (version_35).
+2024-04-20 05:32:56,530 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-20 06:41:48,346 - INFO - Running update.py
+2024-04-20 06:41:48,346 - INFO - args = {'max_good_loss': 0.0001, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 18}
+2024-04-20 06:41:57,080 - WARNING - Found 20 (>= 4) good samples. Updating parameters.
+2024-04-20 06:41:57,084 - INFO - Parameter intervals changed.
+2024-04-20 06:41:59,825 - INFO - Running gridsearch.py
+2024-04-20 06:41:59,825 - INFO - args = {'default_params': False}
+2024-04-20 06:42:03,762 - INFO - Running trainer.py (version_36).
+2024-04-20 06:42:03,762 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-20 08:11:04,036 - INFO - Running update.py
+2024-04-20 08:11:04,036 - WARNING - Skipping parameter update this step.
+2024-04-20 08:11:06,804 - INFO - Running gridsearch.py
+2024-04-20 08:11:06,805 - INFO - args = {'default_params': False}
+2024-04-20 08:11:10,986 - INFO - Running trainer.py (version_37).
+2024-04-20 08:11:10,986 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-20 09:07:56,750 - INFO - Running update.py
+2024-04-20 09:07:56,750 - WARNING - Skipping parameter update this step.
+2024-04-20 09:07:59,499 - INFO - Running gridsearch.py
+2024-04-20 09:07:59,499 - INFO - args = {'default_params': False}
+2024-04-20 09:08:03,434 - INFO - Running trainer.py (version_38).
+2024-04-20 09:08:03,434 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-20 10:42:40,542 - INFO - Running update.py
+2024-04-20 10:42:40,542 - INFO - args = {'max_good_loss': 0.0001, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 21}
+2024-04-20 10:42:50,463 - WARNING - Found 23 (>= 4) good samples. Updating parameters.
+2024-04-20 10:42:50,467 - INFO - Parameter intervals changed.
+2024-04-20 10:42:53,257 - INFO - Running gridsearch.py
+2024-04-20 10:42:53,257 - INFO - args = {'default_params': False}
+2024-04-20 10:42:57,229 - INFO - Running trainer.py (version_39).
+2024-04-20 10:42:57,229 - INFO - args = {'epochs': 4000, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [1], 'strategy': 'auto', 'num_nodes': 1}

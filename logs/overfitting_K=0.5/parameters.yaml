@@ -1,26 +1,22 @@
-init_points: 40 # how many points to take from loaded data
-steps: 45 # how many steps to take from loaded data
-K: 0.5 # list of values for StandardMap
-
-hidden_size: 128
-linear_size: 128 # used when num_lin_layers > 1
-num_rnn_layers: 2
-num_lin_layers: 2
-dropout: 0.0 # doesn't seem necessary
-
+K: 0.5
 batch_size: 256
-loss: mse
-optimizer: adam
-lr: 0.0003
-precision: 32-true
-
-shuffle_trajectories: True # makes sense for linear sampling
-shuffle_batches: False # shuffle batches between epochs
-
+dropout: 0.0
 gridsearch:
-  batch_size: { lower: 150, upper: 250, type: int }
-  lr: { lower: 0.0004, upper: 0.002, type: float }
-  num_rnn_layers: { lower: 2, upper: 5, type: int }
-  num_lin_layers: { lower: 2, upper: 5, type: int }
-  hidden_size: { lower: 70, upper: 250, type: int }
-  linear_size: { lower: 20, upper: 150, type: int }
+  batch_size: {lower: 208, type: int, upper: 214}
+  hidden_size: {lower: 138, type: int, upper: 159}
+  linear_size: {lower: 124, type: int, upper: 145}
+  lr: {lower: 0.00043950642310063357, type: float, upper: 0.00045306955928318444}
+  num_lin_layers: {lower: 4, type: int, upper: 5}
+  num_rnn_layers: {lower: 2, type: int, upper: 2}
+hidden_size: 128
+init_points: 40
+linear_size: 128
+loss: mse
+lr: 0.0003
+num_lin_layers: 2
+num_rnn_layers: 2
+optimizer: adam
+precision: 32-true
+shuffle_batches: false
+shuffle_trajectories: true
+steps: 45
