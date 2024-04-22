@@ -110,12 +110,7 @@ class Model(pl.LightningModule):
         predicted = self(inputs)
 
         loss = torch.nn.functional.cross_entropy(predicted, targets)
-        normed_pred = predicted.softmax(dim=1)
-
-        accuracy = self.accuracy(normed_pred[:, 1], targets[:, 1])
-        f1 = self.f1(normed_pred[:, 1], targets[:, 1])
-        precision = self.precision(normed_pred[:, 1], targets[:, 1])
-        recall = self.recall(normed_pred[:, 1], targets[:, 1])
+        accuracy, f1, precision, recall = self.compute_scores(predicted, targets)
         self.log_dict(
             {"loss/train": loss, "f1/train": f1},
             on_epoch=True,
@@ -138,12 +133,7 @@ class Model(pl.LightningModule):
         predicted = self(inputs)
 
         loss = torch.nn.functional.cross_entropy(predicted, targets)
-        normed_pred = predicted.softmax(dim=1)
-
-        accuracy = self.accuracy(normed_pred[:, 1], targets[:, 1])
-        f1 = self.f1(normed_pred[:, 1], targets[:, 1])
-        precision = self.precision(normed_pred[:, 1], targets[:, 1])
-        recall = self.recall(normed_pred[:, 1], targets[:, 1])
+        accuracy, f1, precision, recall = self.compute_scores(predicted, targets)
         self.log_dict(
             {"loss/val": loss, "f1/val": f1},
             on_epoch=True,
@@ -166,13 +156,9 @@ class Model(pl.LightningModule):
         predicted = self(inputs[0])
 
         loss = torch.nn.functional.cross_entropy(predicted, targets[0])
+        accuracy, f1, precision, recall = self.compute_scores(predicted, targets[0])
+
         normed_pred = predicted.softmax(dim=1)
-
-        accuracy = self.accuracy(normed_pred[:, 1], targets[0][:, 1])
-        f1 = self.f1(normed_pred[:, 1], targets[0][:, 1])
-        # precision = self.precision(normed_pred[:, 1], targets[0][:, 1])
-        # recall = self.recall(normed_pred[:, 1], targets[0][:, 1])
-
         predicted_labels = [1 - torch.round(pred_prob[0]) for pred_prob in normed_pred]
 
         return {
@@ -181,6 +167,20 @@ class Model(pl.LightningModule):
             "f1": f1,
             "predicted_labels": predicted_labels,
         }
+
+    def compute_scores(
+        self, predictions: torch.Tensor, targets: torch.Tensor
+    ) -> Tuple[torch.Tensor]:
+        # second column contains the probability of having label 1
+        normed_pred = predictions.softmax(dim=1)[:, 1]
+        targets = targets[:, 1]
+
+        accuracy = self.accuracy(normed_pred, targets)
+        f1 = self.f1(normed_pred, targets)
+        precision = self.precision(normed_pred, targets)
+        recall = self.recall(normed_pred, targets)
+
+        return accuracy, f1, precision, recall
 
     @rank_zero_only
     def on_train_start(self):
@@ -223,8 +223,6 @@ class Data(pl.LightningDataModule):
             map_object.generate_data(lyapunov=True)
             self.thetas, self.ps = map_object.retrieve_data()
             self.spectrum = map_object.retrieve_spectrum(binary=binary)
-            if plot_data:
-                map_object.plot_data()
 
         # load data
         elif data_path is not None:
@@ -237,25 +235,27 @@ class Data(pl.LightningDataModule):
             self.thetas = self.thetas[:steps]
             self.ps = self.ps[:steps]
 
-            if plot_data:
-                plot_labeled_data(self.thetas, self.ps, self.spectrum)
-
-        # data.shape = [init_points * len(K), 2, steps]
-        self.data = np.stack([self.thetas.T, self.ps.T], axis=1)
-
         # shuffle trajectories
         # NOTE: This will shuffle trajectories between different K
         if self.shuffle_trajectories:
             indices = np.arange(len(self.spectrum))
             self.rng.shuffle(indices)
-            self.data = self.data[indices]
+            self.thetas = self.thetas[:, indices]
+            self.ps = self.ps[:, indices]
             self.spectrum = self.spectrum[indices]
 
             # NOTE: This will set the number of trajectories kept across all K, makes sense if data is shuffled
             if reduce_init_points and data_path is not None:
                 max_points = params.get("init_points")
-                self.data = self.data[:max_points]
+                self.thetas = self.thetas[:, :max_points]
+                self.ps = self.ps[:, :max_points]
                 self.spectrum = self.spectrum[:max_points]
+
+        if plot_data:
+            plot_labeled_data(self.thetas, self.ps, self.spectrum, "Labeled data")
+
+        # data.shape = [init_points * len(K), 2, steps]
+        self.data = np.stack([self.thetas.T, self.ps.T], axis=1)
 
         self.input_output_pairs = self._make_input_output_pairs(
             self.data, self.spectrum
