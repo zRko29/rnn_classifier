@@ -311,7 +311,7 @@ class Data(pl.LightningDataModule):
         spectrum = np.concatenate(spectrum_list)
 
         if binary:
-            spectrum = (spectrum * 1e5 > 10.5).astype(int)
+            spectrum = (spectrum * 1e5 > 11).astype(int)
 
         return thetas, ps, spectrum
 

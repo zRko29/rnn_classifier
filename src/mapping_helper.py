@@ -1,6 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import Tuple, List
+from typing import Tuple, List, Optional
 
 
 class StandardMap:
@@ -30,9 +30,13 @@ class StandardMap:
     def retrieve_data(self) -> Tuple[np.ndarray]:
         return self.theta_values, self.p_values
 
-    def retrieve_spectrum(self, binary: bool = False) -> np.ndarray:
+    def retrieve_spectrum(
+        self,
+        binary: bool = False,
+        threshold: int = 11,
+    ) -> np.ndarray:
         if binary:
-            self.spectrum = (self.spectrum * 1e5 > 10).astype(int)
+            self.spectrum = (self.spectrum * 1e5 > threshold).astype(int)
         return self.spectrum
 
     def save_data(self, data_path: str) -> None:
@@ -137,10 +141,15 @@ class StandardMap:
 
         return theta_init, p_init
 
-    def plot_data(self) -> None:
+    def plot_data(
+        self,
+        show_plot: bool = True,
+        save_path: Optional[str] = None,
+        threshold: int = 10,
+    ) -> None:
         plt.figure(figsize=(7, 4))
         if self.lyapunov:
-            spectrum = self.retrieve_spectrum(binary=True)
+            spectrum = self.retrieve_spectrum(binary=True, threshold=threshold)
             chaotic_indices: np.ndarray[int] = np.where(spectrum == 1)[0]
             regular_indices: np.ndarray[int] = np.where(spectrum == 0)[0]
             plt.plot(
@@ -166,14 +175,35 @@ class StandardMap:
         plt.ylabel("p")
         plt.xlim(-0.05, 1.05)
         plt.ylim(-0.05, 1.05)
-        plt.show()
+        if save_path is not None:
+            plt.savefig(save_path)
+        if show_plot:
+            plt.show()
+        else:
+            plt.close()
 
 
 if __name__ == "__main__":
-    map = StandardMap(init_points=40, steps=500, sampling="random", K=1.0, seed=42)
+    # standard
+    map = StandardMap(init_points=50, steps=200, sampling="random", K=0.1, seed=42)
     map.generate_data(lyapunov=True)
-    map.plot_data()
+    spectrum = map.retrieve_spectrum()
+    print(spectrum.shape)
 
+    # vary chaos threshold
+    # for K in [1.0, 1.5]:
+    #     for threshold in np.arange(11.8, 13, 0.2):
+    #         map = StandardMap(
+    #             init_points=60, steps=500, sampling="random", K=K, seed=42
+    #         )
+    #         map.generate_data(lyapunov=True)
+    #         map.plot_data(
+    #             show_plot=False,
+    #             threshold=threshold,
+    #             save_path=f"plots/K_{K}/threshold_{round(threshold,1)}.pdf",
+    #         )
+
+    # save data
     # for K in np.arange(0.1, 2.1, 0.1):
     #     K = round(K, 1)
     #     path = "testing_data"
