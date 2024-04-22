@@ -120,7 +120,13 @@ class Gridsearch:
         return params
 
 
-def plot_labeled_data(thetas: np.ndarray, ps: np.ndarray, spectrum: np.ndarray) -> None:
+def plot_labeled_data(
+    thetas: np.ndarray,
+    ps: np.ndarray,
+    spectrum: np.ndarray,
+    title: str = None,
+    save_path: str = None,
+) -> None:
     plt.figure(figsize=(7, 4))
     chaotic_indices = np.where(np.array(spectrum) == 1)[0]
     regular_indices = np.where(np.array(spectrum) == 0)[0]
@@ -145,6 +151,11 @@ def plot_labeled_data(thetas: np.ndarray, ps: np.ndarray, spectrum: np.ndarray) 
     plt.ylabel("p")
     plt.xlim(-0.05, 1.05)
     plt.ylim(-0.05, 1.05)
+    if title is not None:
+        plt.title(title)
+    if save_path is not None:
+        plt.savefig(save_path + ".pdf")
+        plt.close()
     plt.show()
 
 
