@@ -1,4 +1,4 @@
-init_points: 40 # how many points to take from loaded data
+init_points: 40 # how many points to take from loaded data if reduce_init_points=True
 steps: 45 # how many steps to take from loaded data
 K: 0.1 # list of values for StandardMap
 

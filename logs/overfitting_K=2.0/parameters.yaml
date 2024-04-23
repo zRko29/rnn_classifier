@@ -1,5 +1,5 @@
-init_points: 40 # how many points to take from loaded data
-steps: 80 # how many steps to take from loaded data
+init_points: 40 # how many points to take from loaded data if reduce_init_points=True
+steps: 70 # how many steps to take from loaded data
 K: 2.0 # list of values for StandardMap
 
 hidden_size: 128
@@ -22,5 +22,5 @@ gridsearch:
   lr: { lower: 0.0004, upper: 0.002, type: float }
   num_rnn_layers: { lower: 1, upper: 5, type: int }
   num_lin_layers: { lower: 1, upper: 5, type: int }
-  hidden_size: { lower: 100, upper: 520, type: int }
+  hidden_size: { lower: 100, upper: 450, type: int }
   linear_size: { lower: 50, upper: 150, type: int }

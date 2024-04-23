@@ -43,7 +43,7 @@ def get_callbacks(args: Namespace, save_path: str) -> List[callbacks]:
         EarlyStopping(
             monitor=args.monitor,
             mode=args.mode,
-            min_delta=1e-6,
+            min_delta=1e-7,
             patience=400,
         ),
         # DeviceStatsMonitor(cpu_stats=False),
