@@ -17,9 +17,7 @@ pl.seed_everything(42, workers=True)
 
 def main() -> None:
     version: Optional[int] = 71
-    name: str = "overfitting_K=1.5"
-
-    directory_path: str = f"logs/{name}"
+    directory_path: str = "../classifier_backup/overfitting_K=1.5"
 
     folders: List = get_inference_folders(directory_path, version)
 

@@ -11,7 +11,6 @@ from pytorch_lightning.loggers import TensorBoardLogger
 from pytorch_lightning.callbacks import (
     EarlyStopping,
     ModelCheckpoint,
-    DeviceStatsMonitor,
 )
 
 from src.helper import Model, Data
@@ -46,7 +45,6 @@ def get_callbacks(args: Namespace, save_path: str) -> List[callbacks]:
             min_delta=1e-7,
             patience=400,
         ),
-        # DeviceStatsMonitor(cpu_stats=False),
     ]
 
 
