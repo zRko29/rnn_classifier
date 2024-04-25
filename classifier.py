@@ -16,8 +16,8 @@ pl.seed_everything(42, workers=True)
 
 
 def main() -> None:
-    version: Optional[int] = 71
-    directory_path: str = "../classifier_backup_1/overfitting_K=1.5"
+    version: Optional[int] = None
+    directory_path: str = "logs/overfitting_K=0.1"
 
     folders: List = get_inference_folders(directory_path, version)
 
@@ -27,9 +27,9 @@ def main() -> None:
         params: dict = read_yaml(params_path)
 
         # NOTE: set these parameters to reduce loaded data
-        params.update({"init_points": 350, "seq_len": 45})
+        params.update({"init_points": 150, "seq_len": 50})
 
-        K = [1.5]
+        K = [params.get("K")]
 
         for idx, K in enumerate(K):
             model_path: str = os.path.join(log_path, f"model.ckpt")
@@ -55,23 +55,23 @@ def main() -> None:
 
             print()
             print(
-                f"{idx} (K = {K}): loss = {predictions['loss']:.2e}, accuracy = {predictions['accuracy']:.2f}, f1 = {predictions['f1']:.2f}"
+                f"{idx} ({K = }): loss = {predictions['loss']:.2e}, accuracy = {predictions['accuracy']:.2f}, f1 = {predictions['f1']:.2f}"
             )
 
             plot_labeled_data(
                 datamodule.thetas,
                 datamodule.ps,
                 datamodule.spectrum,
-                title=f"True Labels (K={K})",
-                save_path=f"{log_path}/true_K={K}",
+                title=f"True Labels ({K=})",
+                save_path=f"{log_path}/true_{K=}",
             )
 
             plot_labeled_data(
                 datamodule.thetas,
                 datamodule.ps,
                 predictions["predicted_labels"],
-                f"Predicted Labels (K={K})",
-                save_path=f"{log_path}/predicted_K={K}",
+                f"Predicted Labels ({K=})",
+                save_path=f"{log_path}/predicted_{K=}",
             )
 
         print()

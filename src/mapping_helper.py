@@ -147,7 +147,7 @@ class StandardMap:
         self,
         show_plot: bool = True,
         save_path: Optional[str] = None,
-        threshold: int = 10,
+        threshold: int = 11,
     ) -> None:
         plt.figure(figsize=(7, 4))
         if self.lyapunov:
@@ -187,10 +187,10 @@ class StandardMap:
 
 if __name__ == "__main__":
     # standard
-    map = StandardMap(init_points=50, steps=200, sampling="random", K=0.1, seed=42)
+    map = StandardMap(init_points=100, steps=200, sampling="random", K=0.3, seed=42)
     map.generate_data(lyapunov=True)
     spectrum = map.retrieve_spectrum()
-    print(spectrum.shape)
+    map.plot_data()
 
     # vary chaos threshold
     # for K in [1.0, 1.5]:

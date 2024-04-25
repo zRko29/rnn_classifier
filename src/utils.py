@@ -159,6 +159,24 @@ def plot_labeled_data(
     plt.show()
 
 
+def plot_f1_scores(
+    seq_lens: np.ndarray,
+    f1_scores: np.ndarray,
+    K: float,
+    save_path: str = None,
+) -> None:
+    plt.figure(figsize=(7, 4))
+    plt.plot(seq_lens, f1_scores, color="tab:blue")
+    plt.xlabel("se1_len")
+    plt.ylabel("F1")
+    plt.title(f"{K = }")
+    plt.grid()
+    if save_path is not None:
+        plt.savefig(save_path + ".pdf")
+        plt.close()
+    plt.show()
+
+
 def import_parsed_args(script_name: str) -> Namespace:
     parser = ArgumentParser(prog=script_name)
 
