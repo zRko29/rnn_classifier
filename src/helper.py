@@ -231,9 +231,9 @@ class Data(pl.LightningDataModule):
             self.thetas, self.ps, self.spectrum = self._load_data(data_path, K, binary)
 
             # NOTE: loaded data contains redundant steps
-            steps = params.get("steps")
-            self.thetas = self.thetas[:steps]
-            self.ps = self.ps[:steps]
+            seq_len = params.get("seq_len")
+            self.thetas = self.thetas[:seq_len]
+            self.ps = self.ps[:seq_len]
 
         # shuffle trajectories
         # NOTE: This will shuffle trajectories between different K
@@ -254,7 +254,7 @@ class Data(pl.LightningDataModule):
         if plot_data:
             plot_labeled_data(self.thetas, self.ps, self.spectrum, "Labeled data")
 
-        # data.shape = [init_points * len(K), 2, steps]
+        # data.shape = [init_points * len(K), 2, seq_len]
         self.data = np.stack([self.thetas.T, self.ps.T], axis=1)
 
         self.input_output_pairs = self._make_input_output_pairs(

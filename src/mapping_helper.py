@@ -62,9 +62,9 @@ class StandardMap:
 
         # shape: (steps, init_points * len(K_list))
         self.theta_values: np.ndarray = np.empty(
-            (steps, theta_i.shape[0] * len(K_list))
+            (steps, self.init_points * len(K_list))
         )
-        self.p_values: np.ndarray = np.empty((steps, p_i.shape[0] * len(K_list)))
+        self.p_values: np.ndarray = np.empty((steps, self.init_points * len(K_list)))
 
         for i, K in enumerate(K_list):
             theta = theta_i.copy()
@@ -73,9 +73,11 @@ class StandardMap:
                 theta = np.mod(theta + p, 1)
                 p = np.mod(p + K / (2 * np.pi) * np.sin(2 * np.pi * theta), 1)
                 self.theta_values[
-                    step, i * theta_i.shape[0] : (i + 1) * theta_i.shape[0]
+                    step, i * self.init_points : (i + 1) * self.init_points
                 ] = theta
-                self.p_values[step, i * p_i.shape[0] : (i + 1) * p_i.shape[0]] = p
+                self.p_values[
+                    step, i * self.init_points : (i + 1) * self.init_points
+                ] = p
 
         if lyapunov:
             self.spectrum = self._lyapunov(K_list)

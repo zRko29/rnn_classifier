@@ -17,7 +17,7 @@ pl.seed_everything(42, workers=True)
 
 def main() -> None:
     version: Optional[int] = 71
-    directory_path: str = "../classifier_backup/overfitting_K=1.5"
+    directory_path: str = "../classifier_backup_1/overfitting_K=1.5"
 
     folders: List = get_inference_folders(directory_path, version)
 
@@ -27,7 +27,7 @@ def main() -> None:
         params: dict = read_yaml(params_path)
 
         # NOTE: set these parameters to reduce loaded data
-        params.update({"init_points": 350, "steps": 100})
+        params.update({"init_points": 350, "seq_len": 45})
 
         K = [1.5]
 

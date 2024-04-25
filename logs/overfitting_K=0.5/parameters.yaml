@@ -1,5 +1,4 @@
 init_points: 40 # how many points to take from loaded data  if reduce_init_points=True
-steps: 60 # how many steps to take from loaded data
 K: 0.5 # list of values for StandardMap
 
 hidden_size: 128
@@ -9,6 +8,7 @@ num_lin_layers: 2
 dropout: 0.0 # doesn't seem necessary
 
 batch_size: 256
+seq_len: 45 # only have one sequence
 loss: mse
 optimizer: adam
 lr: 0.0003
@@ -19,6 +19,7 @@ shuffle_batches: False # shuffle batches between epochs
 
 gridsearch:
   batch_size: { lower: 170, upper: 270, type: int }
+  seq_len: { lower: 20, upper: 80, type: int }
   lr: { lower: 0.0001, upper: 0.0009, type: float }
   num_rnn_layers: { lower: 1, upper: 4, type: int }
   num_lin_layers: { lower: 3, upper: 6, type: int }
