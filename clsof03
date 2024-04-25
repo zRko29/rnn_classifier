@@ -18,7 +18,7 @@ source ~/.bashrc
 conda activate rnn_env
 
 optimization_steps=100
-experiment=logs/overfitting_K=0.5
+experiment=logs/overfitting_K=0.3
 
 for i in $(seq $optimization_steps)
 do

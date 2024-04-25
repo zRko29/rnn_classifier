@@ -1,5 +1,5 @@
 init_points: 40 # how many points to take from loaded data  if reduce_init_points=True
-K: 0.5 # list of values for StandardMap
+K: 0.8 # list of values for StandardMap
 
 hidden_size: 128
 linear_size: 128 # used when num_lin_layers > 1
