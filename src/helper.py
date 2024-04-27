@@ -76,7 +76,7 @@ class Model(pl.LightningModule):
         pos_neg_ratio = (len(labels) - sum(labels)) / sum(labels)
         pos_weight = 2 * pos_neg_ratio / (1 + pos_neg_ratio)
         neg_weight = 2 - pos_weight
-        self.weight = torch.Tensor([neg_weight, pos_weight]).to(self.device)
+        self.weight = torch.tensor([neg_weight, pos_weight])
 
     def forward(self, input_t: torch.Tensor) -> torch.Tensor:
         # h_ts[i].shape = [features, hidden_size]
@@ -177,14 +177,10 @@ class Model(pl.LightningModule):
     def compute_scores(
         self, predictions: torch.Tensor, targets: torch.Tensor
     ) -> Tuple[torch.Tensor]:
-        # print devices
-        print(f"{predictions.device=}")
-        print(f"{targets.device=}")
-        print(f"{self.weight.device=}")
         loss = torch.nn.functional.cross_entropy(
             predictions,
             targets,
-            weight=self.weight,
+            weight=self.weight.to(predictions.device),
         )
         normed_pred = self.invert_one_hot_labels(predictions.softmax(dim=1))
         targets = self.invert_one_hot_labels(targets)
