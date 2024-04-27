@@ -177,6 +177,10 @@ class Model(pl.LightningModule):
     def compute_scores(
         self, predictions: torch.Tensor, targets: torch.Tensor
     ) -> Tuple[torch.Tensor]:
+        # print devices
+        print(f"{predictions.device=}")
+        print(f"{targets.device=}")
+        print(f"{self.weight.device=}")
         loss = torch.nn.functional.cross_entropy(
             predictions,
             targets,
