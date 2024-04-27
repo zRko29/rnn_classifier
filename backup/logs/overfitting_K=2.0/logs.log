@@ -1,0 +1,23 @@
+2024-04-27 03:09:48,047 - INFO - Running gridsearch.py
+2024-04-27 03:09:48,047 - INFO - args = {'default_params': False}
+2024-04-27 03:09:52,556 - INFO - Running trainer.py (version_0).
+2024-04-27 03:09:52,556 - INFO - args = {'epochs': 4500, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [0, 1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-27 03:30:46,200 - INFO - Running update.py
+2024-04-27 03:30:46,200 - WARNING - Skipping parameter update this step.
+2024-04-27 03:30:48,722 - INFO - Running gridsearch.py
+2024-04-27 03:30:48,722 - INFO - args = {'default_params': False}
+2024-04-27 03:30:52,929 - INFO - Running trainer.py (version_1).
+2024-04-27 03:30:52,929 - INFO - args = {'epochs': 4500, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [0, 1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-27 03:53:28,501 - INFO - Running update.py
+2024-04-27 03:53:28,501 - WARNING - Skipping parameter update this step.
+2024-04-27 03:53:31,047 - INFO - Running gridsearch.py
+2024-04-27 03:53:31,047 - INFO - args = {'default_params': False}
+2024-04-27 03:53:35,228 - INFO - Running trainer.py (version_2).
+2024-04-27 03:53:35,228 - INFO - args = {'epochs': 4500, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [0, 1], 'strategy': 'auto', 'num_nodes': 1}
+2024-04-27 04:15:53,466 - INFO - Running update.py
+2024-04-27 04:15:53,466 - INFO - args = {'max_good_loss': 1e-06, 'min_good_samples': 4, 'check_every_n_steps': 3, 'current_step': 3}
+2024-04-27 04:15:53,723 - WARNING - Found 0 (< 4) good samples. Parameters will not be updated.
+2024-04-27 04:15:56,190 - INFO - Running gridsearch.py
+2024-04-27 04:15:56,190 - INFO - args = {'default_params': False}
+2024-04-27 04:16:00,351 - INFO - Running trainer.py (version_3).
+2024-04-27 04:16:00,352 - INFO - args = {'epochs': 4500, 'monitor': 'loss/train', 'mode': 'min', 'train_size': 1.0, 'progress_bar': False, 'accelerator': 'auto', 'devices': [0, 1], 'strategy': 'auto', 'num_nodes': 1}

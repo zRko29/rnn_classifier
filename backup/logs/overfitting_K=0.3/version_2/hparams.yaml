@@ -1,0 +1,15 @@
+K: 0.3
+batch_size: 211
+dropout: 0.0
+hidden_size: 91
+init_points: 40
+linear_size: 113
+loss: mse
+lr: 0.00042517371208097734
+num_lin_layers: 3
+num_rnn_layers: 4
+optimizer: adam
+precision: 32-true
+seq_len: 42
+shuffle_batches: false
+shuffle_trajectories: true
