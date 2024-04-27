@@ -65,7 +65,7 @@ def main(
     )
 
     model: Model = Model(**params)
-    model.weight = datamodule.get_weight()
+    model.set_weight(datamodule.spectrum)
 
     tb_logger = TensorBoardLogger(
         save_dir="", name=args.experiment_path, default_hp_metric=False

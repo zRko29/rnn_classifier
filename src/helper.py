@@ -18,9 +18,6 @@ class Model(pl.LightningModule):
         super(Model, self).__init__()
         self.save_hyperparameters()
 
-        # class weights, added later
-        self.weight = None
-
         self.num_rnn_layers: int = params.get("num_rnn_layers")
         self.num_lin_layers: int = params.get("num_lin_layers")
         dropout: float = params.get("dropout")
@@ -74,6 +71,12 @@ class Model(pl.LightningModule):
             torch.zeros(shape0, hidden_shape, dtype=torch.double).to(self.device)
             for hidden_shape in hidden_shapes
         ]
+
+    def set_weight(self, labels: List[int]) -> torch.Tensor:
+        pos_neg_ratio = (len(labels) - sum(labels)) / sum(labels)
+        pos_weight = 2 * pos_neg_ratio / (1 + pos_neg_ratio)
+        neg_weight = 2 - pos_weight
+        self.weight = torch.Tensor([neg_weight, pos_weight]).to(self.device)
 
     def forward(self, input_t: torch.Tensor) -> torch.Tensor:
         # h_ts[i].shape = [features, hidden_size]
@@ -297,13 +300,6 @@ class Data(pl.LightningDataModule):
 
     def one_hot_labels(self, labels: np.ndarray) -> np.ndarray:
         return [[1 - label, label] for label in labels]
-
-    def get_weight(self) -> torch.Tensor:
-        labels = self.spectrum
-        pos_neg_ratio = (len(labels) - sum(labels)) / sum(labels)
-        pos_weight = 2 * pos_neg_ratio / (1 + pos_neg_ratio)
-        neg_weight = 2 - pos_weight
-        return torch.Tensor([neg_weight, pos_weight])
 
     def _load_data(
         self, path: str, K: List[float] | float, binary: bool
