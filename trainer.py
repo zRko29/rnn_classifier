@@ -43,7 +43,7 @@ def get_callbacks(args: Namespace, save_path: str) -> List[callbacks]:
             monitor=args.monitor,
             mode=args.mode,
             min_delta=1e-7,
-            patience=400,
+            patience=500,
         ),
     ]
 
@@ -65,6 +65,7 @@ def main(
     )
 
     model: Model = Model(**params)
+    model.weight = datamodule.get_weight()
 
     tb_logger = TensorBoardLogger(
         save_dir="", name=args.experiment_path, default_hp_metric=False

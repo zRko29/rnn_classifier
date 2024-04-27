@@ -1,0 +1,26 @@
+K: 0.8 # list of values for StandardMap
+
+hidden_size: 128
+linear_size: 128 # used when num_lin_layers > 1
+num_rnn_layers: 2
+num_lin_layers: 2
+dropout: 0.0 # doesn't seem necessary
+
+batch_size: 256
+seq_len: 45 # only have one sequence
+loss: mse
+optimizer: adam
+lr: 0.0003
+precision: 32-true
+
+shuffle_trajectories: True # makes sense for linear sampling
+shuffle_batches: False # shuffle batches between epochs
+
+gridsearch:
+  batch_size: { lower: 170, upper: 270, type: int }
+  seq_len: { lower: 40, upper: 80, type: int }
+  lr: { lower: 0.0001, upper: 0.0009, type: float }
+  num_rnn_layers: { lower: 1, upper: 4, type: int }
+  num_lin_layers: { lower: 3, upper: 6, type: int }
+  hidden_size: { lower: 100, upper: 250, type: int }
+  linear_size: { lower: 80, upper: 180, type: int }

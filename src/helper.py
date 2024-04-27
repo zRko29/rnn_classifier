@@ -10,13 +10,16 @@ import os
 import numpy as np
 from typing import Tuple, List, Dict
 
-from src.utils import read_yaml, plot_labeled_data
+from src.utils import plot_labeled_data
 
 
 class Model(pl.LightningModule):
     def __init__(self, **params):
         super(Model, self).__init__()
         self.save_hyperparameters()
+
+        # class weights, added later
+        self.weight = None
 
         self.num_rnn_layers: int = params.get("num_rnn_layers")
         self.num_lin_layers: int = params.get("num_lin_layers")
@@ -109,8 +112,7 @@ class Model(pl.LightningModule):
 
         predicted = self(inputs)
 
-        loss = torch.nn.functional.cross_entropy(predicted, targets)
-        accuracy, f1, precision, recall = self.compute_scores(predicted, targets)
+        loss, accuracy, f1, precision, recall = self.compute_scores(predicted, targets)
         self.log_dict(
             {"loss/train": loss, "f1/train": f1},
             on_epoch=True,
@@ -132,8 +134,7 @@ class Model(pl.LightningModule):
 
         predicted = self(inputs)
 
-        loss = torch.nn.functional.cross_entropy(predicted, targets)
-        accuracy, f1, precision, recall = self.compute_scores(predicted, targets)
+        loss, accuracy, f1, precision, recall = self.compute_scores(predicted, targets)
         self.log_dict(
             {"loss/val": loss, "f1/val": f1},
             on_epoch=True,
@@ -155,32 +156,41 @@ class Model(pl.LightningModule):
 
         predicted = self(inputs[0])
 
-        loss = torch.nn.functional.cross_entropy(predicted, targets[0])
-        accuracy, f1, precision, recall = self.compute_scores(predicted, targets[0])
+        loss, accuracy, f1, precision, recall = self.compute_scores(
+            predicted, targets[0]
+        )
 
-        normed_pred = predicted.softmax(dim=1)
-        predicted_labels = [1 - torch.round(pred_prob[0]) for pred_prob in normed_pred]
+        predicted_labels = self.invert_one_hot_labels(predicted.softmax(dim=1).round())
 
         return {
             "loss": loss,
             "accuracy": accuracy,
             "f1": f1,
+            "precision": precision,
+            "recall": recall,
             "predicted_labels": predicted_labels,
         }
 
     def compute_scores(
         self, predictions: torch.Tensor, targets: torch.Tensor
     ) -> Tuple[torch.Tensor]:
-        # second column contains the probability of having label 1
-        normed_pred = predictions.softmax(dim=1)[:, 1]
-        targets = targets[:, 1]
+        loss = torch.nn.functional.cross_entropy(
+            predictions,
+            targets,
+            weight=self.weight,
+        )
+        normed_pred = self.invert_one_hot_labels(predictions.softmax(dim=1))
+        targets = self.invert_one_hot_labels(targets)
 
         accuracy = self.accuracy(normed_pred, targets)
         f1 = self.f1(normed_pred, targets)
         precision = self.precision(normed_pred, targets)
         recall = self.recall(normed_pred, targets)
 
-        return accuracy, f1, precision, recall
+        return loss, accuracy, f1, precision, recall
+
+    def invert_one_hot_labels(self, labels: torch.Tensor) -> torch.Tensor:
+        return torch.argmax(labels, axis=1)
 
     @rank_zero_only
     def on_train_start(self):
@@ -285,6 +295,16 @@ class Data(pl.LightningDataModule):
         one_hot = self.one_hot_labels(self.spectrum)
         return DataLoader(Dataset([(self.data, one_hot)]))
 
+    def one_hot_labels(self, labels: np.ndarray) -> np.ndarray:
+        return [[1 - label, label] for label in labels]
+
+    def get_weight(self) -> torch.Tensor:
+        labels = self.spectrum
+        pos_neg_ratio = (len(labels) - sum(labels)) / sum(labels)
+        pos_weight = 2 * pos_neg_ratio / (1 + pos_neg_ratio)
+        neg_weight = 2 - pos_weight
+        return torch.Tensor([neg_weight, pos_weight])
+
     def _load_data(
         self, path: str, K: List[float] | float, binary: bool
     ) -> Tuple[np.ndarray]:
@@ -324,9 +344,6 @@ class Data(pl.LightningDataModule):
 
         subdirectories.sort()
         return subdirectories
-
-    def one_hot_labels(self, spectrum: np.ndarray) -> np.ndarray:
-        return [[1 - point, point] for point in spectrum]
 
 
 class Dataset(torch.utils.data.Dataset):
