@@ -1,3 +1,0 @@
-{K: 0.8, batch_size: 179, dropout: 0.0, hidden_size: 236, init_points: 40, linear_size: 104,
-  loss: mse, lr: 0.00013408075808787797, num_lin_layers: 4, num_rnn_layers: 4, optimizer: adam,
-  precision: 32-true, seq_len: 70, shuffle_batches: false, shuffle_trajectories: true}
