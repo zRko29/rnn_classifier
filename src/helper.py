@@ -24,6 +24,8 @@ class Model(pl.LightningModule):
         self.lr: float = params.get("lr")
         self.optimizer: str = params.get("optimizer")
 
+        self.non_lin = self.configure_non_linearity(params.get("non_linearity"))
+
         self.accuracy = torchmetrics.Accuracy(task="binary")
         self.f1 = torchmetrics.F1Score(task="binary")
         self.precision = torchmetrics.Precision(task="binary")
@@ -94,11 +96,27 @@ class Model(pl.LightningModule):
 
             # linear layers
             output = self.lins[0](h_ts[-1])
+            output = self.non_lin(output)
             for i in range(1, self.num_lin_layers):
                 output = self.lins[i](output)
+                output = self.non_lin(output)
 
         # just take the last output
         return output
+
+    def configure_non_linearity(self, non_linearity: str) -> torch.nn.Module:
+        if non_linearity is None:
+            return torch.nn.Identity()
+        elif non_linearity.lower() == "relu":
+            return torch.nn.ReLU()
+        elif non_linearity.lower() == "leaky_relu":
+            return torch.nn.LeakyReLU()
+        elif non_linearity.lower() == "tanh":
+            return torch.nn.Tanh()
+        elif non_linearity.lower() == "elu":
+            return torch.nn.ELU()
+        elif non_linearity.lower() == "selu":
+            return torch.nn.SELU()
 
     def configure_optimizers(self) -> optim.Optimizer:
         if self.optimizer == "adam":

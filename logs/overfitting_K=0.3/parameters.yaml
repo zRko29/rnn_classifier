@@ -4,6 +4,7 @@ hidden_size: 128
 linear_size: 128 # used when num_lin_layers > 1
 num_rnn_layers: 2
 num_lin_layers: 2
+non_linearity: selu
 dropout: 0.0 # doesn't seem necessary
 
 batch_size: 256
