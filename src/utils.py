@@ -4,8 +4,9 @@ import yaml
 from argparse import Namespace, ArgumentParser
 import os
 from tensorboard.backend.event_processing.event_accumulator import EventAccumulator
-import torch
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
+from sklearn.metrics import confusion_matrix
 
 import logging
 
@@ -17,7 +18,7 @@ def read_yaml(parameters_path: str) -> dict:
 
 def save_yaml(file: dict, param_file_path: str) -> dict[str | float | int]:
     with open(param_file_path, "w") as f:
-        yaml.dump(file, f, default_flow_style=None, default_style=None)
+        yaml.dump(file, f, default_flow_style=None, default_style=None, sort_keys=False)
 
 
 def get_inference_folders(directory_path: str, version: str) -> List[str]:
@@ -163,17 +164,100 @@ def plot_f1_scores(
     seq_lens: np.ndarray,
     f1_scores: np.ndarray,
     K: float,
+    x_label: str,
     save_path: str = None,
 ) -> None:
     plt.figure(figsize=(7, 4))
     plt.plot(seq_lens, f1_scores, color="tab:blue")
-    plt.xlabel("se1_len")
+    plt.xlabel(x_label)
     plt.ylabel("F1")
-    plt.title(f"{K = }")
+    # plt.title(f"{K = }")
     plt.grid()
     if save_path is not None:
         plt.savefig(save_path + ".pdf")
         plt.close()
+    plt.show()
+
+
+def make_labels_animation(
+    thetas: np.ndarray,
+    ps: np.ndarray,
+    K_list: List[float],
+    predicted_labels_list: List[np.ndarray],
+    true_labels_list: List[np.ndarray],
+    output_file: str = "animation",
+) -> None:
+    fig, (ax3, ax1, ax2) = plt.subplots(1, 3, figsize=(13, 4))
+
+    def update(frame):
+        ax1.clear()
+        ax2.clear()
+        ax3.clear()
+
+        # Plot predicted labels
+        chaotic_indices_pred = np.where(np.array(predicted_labels_list[frame]) == 1)[0]
+        regular_indices_pred = np.where(np.array(predicted_labels_list[frame]) == 0)[0]
+        ax1.plot(
+            thetas[:, chaotic_indices_pred],
+            ps[:, chaotic_indices_pred],
+            "ro",
+            markersize=0.5,
+        )
+        ax1.plot(
+            thetas[:, regular_indices_pred],
+            ps[:, regular_indices_pred],
+            "bo",
+            markersize=0.5,
+        )
+        ax1.set_title(f"Predicted Labels (K = {K_list[frame]})")
+
+        # Plot true labels
+        chaotic_indices_true = np.where(np.array(true_labels_list[frame]) == 1)[0]
+        regular_indices_true = np.where(np.array(true_labels_list[frame]) == 0)[0]
+        ax2.plot(
+            thetas[:, chaotic_indices_true],
+            ps[:, chaotic_indices_true],
+            "ro",
+            markersize=0.5,
+        )
+        ax2.plot(
+            thetas[:, regular_indices_true],
+            ps[:, regular_indices_true],
+            "bo",
+            markersize=0.5,
+        )
+        ax2.set_title("True Labels")
+
+        # Calculate confusion matrix
+        cm = confusion_matrix(true_labels_list[frame], predicted_labels_list[frame])
+
+        # Plot confusion matrix
+        ax3.imshow(cm, interpolation="nearest", cmap=plt.cm.Blues)
+        ax3.set_title("Confusion Matrix")
+        ax3.set_xlabel("Predicted")
+        ax3.set_ylabel("True")
+
+        # Display values inside the heatmap
+        for i in range(cm.shape[0]):
+            for j in range(cm.shape[1]):
+                ax3.text(
+                    j,
+                    i,
+                    format(cm[i, j], "d"),
+                    ha="center",
+                    va="center",
+                    color="white" if cm[i, j] > cm.max() / 2 else "black",
+                )
+
+        # Remove x and y ticks
+        ax3.set_xticks(np.arange(cm.shape[1]))
+        ax3.set_yticks(np.arange(cm.shape[0]))
+        ax3.set_xticklabels(["Regular", "Chaotic"])
+        ax3.set_yticklabels(["Regular", "Chaotic"])
+
+        plt.tight_layout()
+
+    ani = FuncAnimation(fig, update, frames=len(predicted_labels_list), interval=1000)
     plt.show()
 
 
