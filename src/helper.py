@@ -26,10 +26,10 @@ class Model(pl.LightningModule):
 
         self.non_lin = self.configure_non_linearity(params.get("non_linearity"))
 
-        self.accuracy = torchmetrics.Accuracy(task="binary")
-        self.f1 = torchmetrics.F1Score(task="binary")
-        self.precision = torchmetrics.Precision(task="binary")
-        self.recall = torchmetrics.Recall(task="binary")
+        self.accuracy = torchmetrics.Accuracy(task="binary", threshold=0.5)
+        self.f1 = torchmetrics.F1Score(task="binary", threshold=0.5)
+        self.precision = torchmetrics.Precision(task="binary", threshold=0.5)
+        self.recall = torchmetrics.Recall(task="binary", threshold=0.5)
 
         # ----------------------
         # NOTE: This logic is kept so that variable layer sizes can be reimplemented in the future
@@ -200,17 +200,20 @@ class Model(pl.LightningModule):
             targets,
             weight=self.weight.to(predictions.device),
         )
-        normed_pred = self.invert_one_hot_labels(predictions.softmax(dim=1))
+        pred = self.invert_one_hot_labels(predictions)
+        # use predictions = (predictions.softmax(dim=1)[:, 1] >= threshold).long() to support different thresholds
+
         targets = self.invert_one_hot_labels(targets)
 
-        accuracy = self.accuracy(normed_pred, targets)
-        f1 = self.f1(normed_pred, targets)
-        precision = self.precision(normed_pred, targets)
-        recall = self.recall(normed_pred, targets)
+        accuracy = self.accuracy(pred, targets)
+        f1 = self.f1(pred, targets)
+        precision = self.precision(pred, targets)
+        recall = self.recall(pred, targets)
 
         return loss, accuracy, f1, precision, recall
 
     def invert_one_hot_labels(self, labels: torch.Tensor) -> torch.Tensor:
+        # works because one-hot encoding is [max, min] = 0 and [min, max] = 1
         return torch.argmax(labels, axis=1)
 
     @rank_zero_only
