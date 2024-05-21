@@ -72,7 +72,7 @@ class StandardMap:
         for i, K in enumerate(K_list):
             theta = theta_i.copy()
             p = p_i.copy()
-            for step in range(steps):
+            for step in range(1, self.steps - 1):
                 theta = np.mod(theta + p, 1)
                 p = np.mod(p + K / (2 * np.pi) * np.sin(2 * np.pi * theta), 1)
                 self.theta_values[
@@ -208,7 +208,9 @@ if __name__ == "__main__":
     #             save_path=f"plots/K_{K}/threshold_{round(threshold,1)}.pdf",
     #         )
 
-    # save data
+    # import os
+
+    # # save data
     # for K in np.arange(0.1, 2.1, 0.1):
     #     K = round(K, 1)
     #     path = "testing_data"
