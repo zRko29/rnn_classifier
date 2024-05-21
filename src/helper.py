@@ -176,6 +176,7 @@ class Model(pl.LightningModule):
         inputs, targets = batch
 
         predicted = self(inputs[0])
+        self.weight = torch.tensor([1, 1])
 
         loss, accuracy, f1, precision, recall = self.compute_scores(
             predicted, targets[0]

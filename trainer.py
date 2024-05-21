@@ -73,9 +73,6 @@ def main(
 
     save_path: str = os.path.join(tb_logger.name, f"version_{tb_logger.version}")
 
-    if args.accelerator == "cpu":
-        args.devices = "auto"
-
     trainer = Trainer(
         max_epochs=args.epochs,
         precision=params.get("precision"),

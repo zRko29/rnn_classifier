@@ -66,6 +66,9 @@ class StandardMap:
         )
         self.p_values: np.ndarray = np.empty((steps, self.init_points * len(K_list)))
 
+        self.theta_values[0] = np.tile(theta_i, len(K_list))
+        self.p_values[0] = np.tile(p_i, len(K_list))
+
         for i, K in enumerate(K_list):
             theta = theta_i.copy()
             p = p_i.copy()
@@ -187,7 +190,7 @@ class StandardMap:
 
 if __name__ == "__main__":
     # standard
-    map = StandardMap(init_points=100, steps=200, sampling="random", K=0.3, seed=42)
+    map = StandardMap(init_points=200, steps=300, sampling="random", K=0.8, seed=42)
     map.generate_data(lyapunov=True)
     spectrum = map.retrieve_spectrum()
     map.plot_data()

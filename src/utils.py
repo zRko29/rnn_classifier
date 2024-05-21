@@ -160,6 +160,48 @@ def plot_labeled_data(
     plt.show()
 
 
+def subplot_labeled_data(
+    thetas: np.ndarray,
+    ps: np.ndarray,
+    spectrum: List[np.ndarray],
+    titles: List[str] = None,
+    save_path: str = None,
+) -> None:
+    fix, ax = plt.subplots(1, 2, figsize=(10, 5), sharey=True)
+
+    for index in range(len(spectrum)):
+        chaotic_indices = np.where(np.array(spectrum[index]) == 1)[0]
+        regular_indices = np.where(np.array(spectrum[index]) == 0)[0]
+        ax[index].plot(
+            thetas[:, chaotic_indices],
+            ps[:, chaotic_indices],
+            "ro",
+            markersize=0.5,
+        )
+        ax[index].plot(
+            thetas[:, regular_indices],
+            ps[:, regular_indices],
+            "bo",
+            markersize=0.5,
+        )
+        legend_handles = [
+            plt.scatter([], [], color="red", marker=".", label="Chaotic"),
+            plt.scatter([], [], color="blue", marker=".", label="Regular"),
+        ]
+        ax[index].set_xlabel(r"$\theta$")
+        ax[0].set_ylabel("p")
+        ax[index].set_xlim(-0.05, 1.05)
+        ax[index].set_ylim(-0.05, 1.05)
+        ax[index].set_title(titles[index])
+
+    plt.legend(handles=legend_handles, bbox_to_anchor=(1.0, 1.0))
+    plt.tight_layout()
+    # if save_path is not None:
+    #     plt.savefig(save_path + ".pdf")
+    #     plt.close()
+    plt.show()
+
+
 def plot_f1_scores(
     seq_lens: np.ndarray,
     f1_scores: np.ndarray,
@@ -261,6 +303,25 @@ def make_labels_animation(
     plt.show()
 
 
+def plot_K_seq_len_heat_map(
+    results: np.ndarray,
+    K_list: np.ndarray,
+    seq_lens: np.ndarray,
+    save_path: str = None,
+) -> None:
+    results = np.array(results).reshape(len(seq_lens), len(K_list))
+    plt.imshow(results, aspect="auto", origin="lower")
+    plt.xlabel("K")
+    plt.xticks(ticks=np.arange(len(K_list))[::3], labels=K_list[::3])
+    plt.ylabel("seq_len")
+    plt.yticks(ticks=np.arange(len(seq_lens))[::3], labels=seq_lens[::3])
+    plt.colorbar(label="F1")
+    plt.title("F1 score")
+    if save_path is not None:
+        plt.savefig(save_path + ".pdf")
+    plt.show()
+
+
 def import_parsed_args(script_name: str) -> Namespace:
     parser = ArgumentParser(prog=script_name)
 
@@ -319,9 +380,9 @@ def import_parsed_args(script_name: str) -> Namespace:
         )
         parser.add_argument(
             "--devices",
-            nargs="*",
             type=int,
-            help="List of devices to use. (default: %(default)s)",
+            default=1,
+            help="Number of devices to use. (default: %(default)s)",
         )
         parser.add_argument(
             "--strategy",

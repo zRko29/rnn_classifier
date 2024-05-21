@@ -33,7 +33,7 @@ def get_loss_and_params(dir: str, logger: logging.Logger) -> pd.DataFrame:
                 if loss_value and parameter_dict:
                     all_loss_hyperparams.append(
                         {
-                            "directory": directory,
+                            "directory": int(directory.split("_")[-1]),
                             **loss_value,
                             **parameter_dict,
                         }
