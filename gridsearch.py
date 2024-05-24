@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     args.experiment_path = os.path.abspath(args.experiment_path)
 
-    logger = setup_logger(args.experiment_path)
+    logger = setup_logger(args.experiment_path, "rnn_classifier")
     logger.info("Running gridsearch.py")
 
     print_args = args.__dict__.copy()

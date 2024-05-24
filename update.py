@@ -14,7 +14,9 @@ from src.utils import (
 )
 
 
-def get_loss_and_params(dir: str, logger: logging.Logger) -> pd.DataFrame:
+def get_loss_and_params(dir: str) -> pd.DataFrame:
+    logger = logging.getLogger("rnn_classifier")
+
     all_loss_hyperparams = []
     try:
         for directory in sorted(os.listdir(dir)):
@@ -48,9 +50,10 @@ def get_loss_and_params(dir: str, logger: logging.Logger) -> pd.DataFrame:
 def compute_new_parameter_intervals(
     results: pd.DataFrame,
     args: Namespace,
-    logger: logging.Logger,
     params_path: str,
 ) -> Dict[str, Tuple[float, float]]:
+    logger = logging.getLogger("rnn_classifier")
+
     gridsearch_params = read_yaml(params_path)["gridsearch"]
 
     parameters = []
@@ -129,8 +132,9 @@ def get_new_intervals(
 def update_yaml_file(
     params_path: str,
     parameters: List[Parameter],
-    logger: logging.Logger,
 ) -> None:
+    logger = logging.getLogger("rnn_classifier")
+
     if parameters is not None:
         gridsearch_dict = {}
         for param in parameters:
@@ -156,26 +160,25 @@ def update_yaml_file(
             save_yaml(yaml_params, params_path)
 
 
-def main(args: Namespace, logger: logging.Logger) -> None:
+def main(args: Namespace) -> None:
     params_path = os.path.join(args.experiment_path, "parameters.yaml")
 
-    loss_and_params = get_loss_and_params(args.experiment_path, logger)
+    loss_and_params = get_loss_and_params(args.experiment_path)
 
     parameters = compute_new_parameter_intervals(
         results=loss_and_params,
         args=args,
-        logger=logger,
         params_path=params_path,
     )
 
-    update_yaml_file(params_path, parameters, logger)
+    update_yaml_file(params_path, parameters)
 
 
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Parameter updater")
     args.experiment_path = os.path.abspath(args.experiment_path)
 
-    logger = setup_logger(args.experiment_path)
+    logger = setup_logger(args.experiment_path, "rnn_classifier")
     logger.info("Running update.py")
 
     if args.current_step % args.check_every_n_steps != 0:
@@ -186,4 +189,4 @@ if __name__ == "__main__":
     del print_args["experiment_path"]
     logger.info(f"args = {print_args}")
 
-    main(args, logger)
+    main(args)

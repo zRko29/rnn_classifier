@@ -51,9 +51,9 @@ def get_callbacks(args: Namespace, save_path: str) -> List[callbacks]:
 def main(
     args: Namespace,
     params: dict,
-    logger: Optional[logging.Logger],
     map_object: Optional[StandardMap] = None,
 ) -> None:
+    logger = logging.getLogger("rnn_classifier")
 
     datamodule: Data = Data(
         data_path="training_data",
@@ -72,6 +72,9 @@ def main(
     )
 
     save_path: str = os.path.join(tb_logger.name, f"version_{tb_logger.version}")
+
+    if args.accelerator == "cpu":
+        args.devices = "auto"
 
     trainer = Trainer(
         max_epochs=args.epochs,
@@ -100,9 +103,9 @@ if __name__ == "__main__":
     args: Namespace = import_parsed_args("Autoregressor trainer")
     args.experiment_path = os.path.abspath(args.experiment_path)
 
-    logger = setup_logger(args.experiment_path)
+    logger = setup_logger(args.experiment_path, "rnn_classifier")
 
     params_path = os.path.join(args.experiment_path, "current_params.yaml")
     params = read_yaml(params_path)
 
-    main(args, params, logger)
+    main(args, params)

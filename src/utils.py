@@ -34,8 +34,8 @@ def get_inference_folders(directory_path: str, version: str) -> List[str]:
     return folders
 
 
-def setup_logger(log_file_path: str) -> logging.Logger:
-    logger = logging.getLogger("rnn_classifier")
+def setup_logger(log_file_path: str, logger_name: str) -> logging.Logger:
+    logger = logging.getLogger(logger_name)
     logger.setLevel(logging.INFO)
 
     try:
@@ -380,9 +380,9 @@ def import_parsed_args(script_name: str) -> Namespace:
         )
         parser.add_argument(
             "--devices",
+            nargs="*",
             type=int,
-            default=1,
-            help="Number of devices to use. (default: %(default)s)",
+            help="List of devices to use. (default: %(default)s)",
         )
         parser.add_argument(
             "--strategy",
