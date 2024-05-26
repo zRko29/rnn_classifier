@@ -84,22 +84,21 @@ class Model(pl.LightningModule):
         # h_ts[i].shape = [features, hidden_size]
         h_ts = self._init_hidden(input_t.shape[0], self.hidden_sizes)
 
+        # rnn layers
         for input in input_t.split(1, dim=2):
             input = input.squeeze(2)
-
-            # rnn layers
             h_ts[0] = self.rnns[0](input, h_ts[0])
             h_ts[0] = self.dropout(h_ts[0])
             for i in range(1, self.num_rnn_layers):
                 h_ts[i] = self.rnns[i](h_ts[i - 1], h_ts[i])
                 h_ts[i] = self.dropout(h_ts[i])
 
-            # linear layers
-            output = self.lins[0](h_ts[-1])
+        output = h_ts[-1]
+
+        # linear layers
+        for i in range(self.num_lin_layers):
+            output = self.lins[i](output)
             output = self.non_lin(output)
-            for i in range(1, self.num_lin_layers):
-                output = self.lins[i](output)
-                output = self.non_lin(output)
 
         # just take the last output
         return output
