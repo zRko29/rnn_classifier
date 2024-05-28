@@ -117,6 +117,9 @@ class Gridsearch:
                 params[key] = choice
             elif type == "float":
                 params[key] = rng.uniform(space["lower"], space["upper"])
+            elif type == "log":
+                log_value = rng.uniform(space["lower"], space["upper"])
+                params[key] = 10**log_value
 
         return params
 
