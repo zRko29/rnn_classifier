@@ -21,16 +21,19 @@ def save_yaml(file: dict, param_file_path: str) -> dict[str | float | int]:
         yaml.dump(file, f, default_flow_style=None, default_style=None, sort_keys=False)
 
 
-def get_inference_folders(directory_path: str, version: str) -> List[str]:
-    if version is not None:
-        folders: List[str] = [os.path.join(directory_path, f"version_{version}")]
-    else:
-        folders: List[str] = [
+def get_inference_folders(directory_path: str, version: List[int] | int) -> List[str]:
+    if version is None:
+        folders = [
             os.path.join(directory_path, folder)
             for folder in os.listdir(directory_path)
             if os.path.isdir(os.path.join(directory_path, folder))
         ]
-        folders.sort()
+    elif isinstance(version, int):
+        folders = [os.path.join(directory_path, f"version_{version}")]
+    elif isinstance(version, list):
+        folders = [os.path.join(directory_path, f"version_{v}") for v in version]
+
+    folders.sort()
     return folders
 
 
@@ -150,7 +153,7 @@ def plot_labeled_data(
         plt.scatter([], [], color="red", marker=".", label="Chaotic"),
         plt.scatter([], [], color="blue", marker=".", label="Regular"),
     ]
-    plt.legend(handles=legend_handles)
+    plt.legend(handles=legend_handles, loc="upper right")
     plt.xlabel(r"$\theta$")
     plt.ylabel("p")
     plt.xlim(-0.05, 1.05)
@@ -199,24 +202,28 @@ def subplot_labeled_data(
 
     plt.legend(handles=legend_handles, bbox_to_anchor=(1.0, 1.0))
     plt.tight_layout()
-    # if save_path is not None:
-    #     plt.savefig(save_path + ".pdf")
-    #     plt.close()
+    if save_path is not None:
+        plt.savefig(save_path + ".pdf")
+        plt.close()
     plt.show()
 
 
 def plot_f1_scores(
     seq_lens: np.ndarray,
     f1_scores: np.ndarray,
+    accuracies: np.ndarray,
     K: float,
     x_label: str,
     save_path: str = None,
 ) -> None:
     plt.figure(figsize=(7, 4))
-    plt.plot(seq_lens, f1_scores, color="tab:blue")
+    plt.plot(seq_lens, f1_scores, color="tab:blue", label="F1")
+    plt.plot(seq_lens, accuracies, color="tab:red", label="Accuracy")
     plt.xlabel(x_label)
-    plt.ylabel("F1")
+    plt.ylabel("score")
+    plt.yticks(np.arange(0, 1.1, 0.1))
     # plt.title(f"{K = }")
+    plt.legend()
     plt.grid()
     if save_path is not None:
         plt.savefig(save_path + ".pdf")
@@ -329,44 +336,54 @@ def import_parsed_args(script_name: str) -> Namespace:
     parser = ArgumentParser(prog=script_name)
 
     parser.add_argument(
-        "--experiment_path",
+        "--path",
         type=str,
-        default="logs/",
-        help="Path to the experiment directory. (default: %(default)s)",
+        help="Path to the experiment directory.",
     )
 
     if script_name == "Gridsearch step":
         parser.add_argument(
             "--default_params",
-            "-dflt",
+            "-default",
             action="store_true",
             help="Use default parameters for the gridsearch. (default: False)",
         )
 
-    elif script_name == "Autoregressor trainer":
+    elif script_name == "Classifier trainer":
         parser.add_argument(
             "--epochs",
             type=int,
-            default=1000,
-            help="Number of epochs to train the model for. (default: %(default)s)",
+            help="Number of epochs to train the model for.",
         )
         parser.add_argument(
-            "--monitor",
+            "--monitor_checkpoint",
             type=str,
             default="loss/train",
-            help="Metric to monitor for early stopping and checkpointing. (default: %(default)s)",
+            help="Monitor value for checkpointing. (default: loss/train)",
         )
         parser.add_argument(
-            "--mode",
+            "--mode_checkpoint",
             type=str,
             default="min",
-            help="Mode (min/max) for early stopping and checkpointing. (default: %(default)s)",
+            help="Mode for checkpointing. (default: min)",
+        )
+        parser.add_argument(
+            "--monitor_stopping",
+            type=str,
+            default="loss/train",
+            help="Monitor value for stopping. (default: loss/train)",
+        )
+        parser.add_argument(
+            "--mode_stopping",
+            type=str,
+            default="min",
+            help="Mode for stopping. (default: min)",
         )
         parser.add_argument(
             "--train_size",
             type=float,
-            default=0.8,
-            help="Fraction of data to use for training. (default: %(default)s)",
+            default=1.0,
+            help="Fraction of data to use for training. (default: 1.0)",
         )
         parser.add_argument(
             "--progress_bar",
@@ -375,23 +392,11 @@ def import_parsed_args(script_name: str) -> Namespace:
             help="Show progress bar during training. (default: False)",
         )
         parser.add_argument(
-            "--accelerator",
-            type=str,
-            default="auto",
-            choices=["auto", "cpu", "gpu"],
-            help="Specify the accelerator to use. (default: %(default)s)",
-        )
-        parser.add_argument(
             "--devices",
-            nargs="*",
+            # nargs="*",
             type=int,
-            help="List of devices to use. (default: %(default)s)",
-        )
-        parser.add_argument(
-            "--strategy",
-            type=str,
-            default="auto",
-            help="Specify the training strategy. (default: %(default)s)",
+            default=1,
+            help="Specify the devices to use for training. (default: 1)",
         )
         parser.add_argument(
             "--num_nodes",
@@ -399,31 +404,38 @@ def import_parsed_args(script_name: str) -> Namespace:
             default=1,
             help="Specify number of nodes to use. (default: 1)",
         )
+        parser.add_argument(
+            "--checkpoint_path",
+            "-ckpt",
+            type=str,
+            default=None,
+            help="Path to the checkpoint file. (default: None)",
+        )
 
     elif script_name == "Parameter updater":
         parser.add_argument(
             "--max_good_loss",
             type=float,
             default=5e-6,
-            help="Maximum loss value considered acceptable for selecting parameters. (default: %(default)s)",
+            help="Maximum loss value considered acceptable for selecting parameters. (default: 5e-6)",
         )
         parser.add_argument(
             "--min_good_samples",
             type=int,
             default=3,
-            help="Minimum number of good samples required to start updating parameters. (default: %(default)s)",
+            help="Minimum number of good samples required to start updating parameters. (default: 3)",
         )
         parser.add_argument(
             "--check_every_n_steps",
             type=int,
             default=1,
-            help="Check for new good samples every n steps. Its suggested that check_every_n_steps < min_good_samples, so that results are less likely to converge to a local optimium. (default: %(default)s)",
+            help="Check for new good samples every n steps. Its suggested that check_every_n_steps < min_good_samples, so that results are less likely to converge to a local optimium. (default: 1)",
         )
         parser.add_argument(
             "--current_step",
             type=int,
             default=1,
-            help="Current step of the training. (default: None)",
+            help="Current step of the training. (default: 1)",
         )
 
     return parser.parse_args()

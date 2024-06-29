@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import Tuple, List, Optional
-
+import pyprind
+import os
 
 class StandardMap:
     """
@@ -15,7 +16,7 @@ class StandardMap:
         K: float = None,
         sampling: str = None,
         seed: bool = None,
-        lyapunov_steps: int = 10**5,
+        lyapunov_steps: int = 1.0e5,
         params: dict = None,
     ) -> None:
         self.init_points: int = init_points or params.get("init_points")
@@ -24,7 +25,7 @@ class StandardMap:
         self.sampling: str = sampling or params.get("sampling")
 
         self.rng: np.random.Generator = np.random.default_rng(seed=seed)
-        self.lyapunov_steps: int = lyapunov_steps
+        self.lyapunov_steps: int = int(lyapunov_steps)
         self.spectrum = np.array([])
 
     def retrieve_data(self) -> Tuple[np.ndarray]:
@@ -36,7 +37,7 @@ class StandardMap:
         threshold: int = 11,
     ) -> np.ndarray:
         if binary:
-            self.spectrum = (self.spectrum * 1e5 > threshold).astype(int)
+            self.spectrum = (self.spectrum * 1.0e5 > threshold).astype(int)
         return self.spectrum
 
     def save_data(self, data_path: str) -> None:
@@ -61,18 +62,24 @@ class StandardMap:
                 K_list: List[float] = self.K
 
         # shape: (steps, init_points * len(K_list))
-        self.theta_values: np.ndarray = np.empty(
+        self.theta_values: np.ndarray = np.zeros(
             (steps, self.init_points * len(K_list))
         )
-        self.p_values: np.ndarray = np.empty((steps, self.init_points * len(K_list)))
+        self.p_values: np.ndarray = np.zeros((steps, self.init_points * len(K_list)))
 
         self.theta_values[0] = np.tile(theta_i, len(K_list))
         self.p_values[0] = np.tile(p_i, len(K_list))
 
+        pbar = pyprind.ProgBar(
+            len(K_list) * steps,
+            bar_char="█",
+            title="Generating data for Standard Map",
+        )
+
         for i, K in enumerate(K_list):
             theta = theta_i.copy()
             p = p_i.copy()
-            for step in range(1, self.steps - 1):
+            for step in range(1, steps):
                 theta = np.mod(theta + p, 1)
                 p = np.mod(p + K / (2 * np.pi) * np.sin(2 * np.pi * theta), 1)
                 self.theta_values[
@@ -81,6 +88,10 @@ class StandardMap:
                 self.p_values[
                     step, i * self.init_points : (i + 1) * self.init_points
                 ] = p
+
+                pbar.update()
+
+        print()
 
         if lyapunov:
             self.spectrum = self._lyapunov(K_list)
@@ -98,6 +109,13 @@ class StandardMap:
 
     def _lyapunov(self, K_list: List[float], treshold: int = 1e3) -> np.ndarray:
         spectrum = np.empty(self.theta_values.shape[1])
+
+        pbar = pyprind.ProgBar(
+            self.theta_values.shape[1] * self.lyapunov_steps,
+            bar_char="█",
+            title="Calculating Lyapunov spectrum",
+        )
+
         for column in range(self.theta_values.shape[1]):
             M = np.identity(2)
             exp = np.zeros(2)
@@ -117,10 +135,14 @@ class StandardMap:
                     exp += np.log(np.abs(R.diagonal()))
                     M = Q
 
+                pbar.update()
+
             _, R = np.linalg.qr(M)
             exp += np.log(np.abs(R.diagonal()))
 
             spectrum[column] = exp[0] / self.lyapunov_steps
+
+        print()
 
         return spectrum
 
@@ -190,10 +212,11 @@ class StandardMap:
 
 if __name__ == "__main__":
     # standard
-    map = StandardMap(init_points=200, steps=300, sampling="random", K=0.8, seed=42)
-    map.generate_data(lyapunov=True)
-    spectrum = map.retrieve_spectrum()
-    map.plot_data()
+    # map = StandardMap(init_points=100, steps=300, sampling="random", K=0.9, seed=42)
+    # map.generate_data(lyapunov=True)
+    # spectrum = map.retrieve_spectrum()
+    # print((spectrum * 10**5 > 11).astype(int).sum())
+    # map.plot_data()
 
     # vary chaos threshold
     # for K in [1.0, 1.5]:
@@ -208,16 +231,19 @@ if __name__ == "__main__":
     #             save_path=f"plots/K_{K}/threshold_{round(threshold,1)}.pdf",
     #         )
 
-    # import os
+    
 
-    # # save data
-    # for K in np.arange(0.1, 2.1, 0.1):
+
+
+    # for K in np.arange(3.0, 3.6, 0.1):
     #     K = round(K, 1)
-    #     path = "testing_data"
+    #     path = "training_data"
     #     if str(K) not in os.listdir(path):
+    #         print()
+    #         print(f"{K = }")
     #         os.mkdir(f"{path}/{K}")
     #         map = StandardMap(
-    #             init_points=100, steps=1000, sampling="random", K=K, seed=42
+    #             init_points=2601, steps=1000, sampling="grid", K=K, seed=42
     #         )
     #         map.generate_data(lyapunov=True)
     #         map.save_data(data_path=f"{path}/{K}")

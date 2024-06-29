@@ -161,9 +161,9 @@ def update_yaml_file(
 
 
 def main(args: Namespace) -> None:
-    params_path = os.path.join(args.experiment_path, "parameters.yaml")
+    params_path = os.path.join(args.path, "parameters.yaml")
 
-    loss_and_params = get_loss_and_params(args.experiment_path)
+    loss_and_params = get_loss_and_params(args.path)
 
     parameters = compute_new_parameter_intervals(
         results=loss_and_params,
@@ -176,9 +176,9 @@ def main(args: Namespace) -> None:
 
 if __name__ == "__main__":
     args: Namespace = import_parsed_args("Parameter updater")
-    args.experiment_path = os.path.abspath(args.experiment_path)
+    args.path = os.path.abspath(args.path)
 
-    logger = setup_logger(args.experiment_path, "rnn_classifier")
+    logger = setup_logger(args.path, "rnn_classifier")
     logger.info("Running update.py")
 
     if args.current_step % args.check_every_n_steps != 0:
@@ -186,7 +186,7 @@ if __name__ == "__main__":
         exit()
 
     print_args = args.__dict__.copy()
-    del print_args["experiment_path"]
+    del print_args["path"]
     logger.info(f"args = {print_args}")
 
     main(args)
