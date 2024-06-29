@@ -1,0 +1,22 @@
+K: [1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 2.0]
+
+hidden_size: 200
+linear_size: 156
+num_rnn_layers: 2
+num_lin_layers: 4
+nonlinearity_hidden: tanh
+nonlinearity_lin: tanh
+dropout: 0.0
+
+batch_size: 350
+seq_len: 20 # only have one sequence
+loss: cross_entropy
+optimizer: adam
+bypass_n_steps: 3
+lr: 4.0e-4
+precision: 16-mixed
+
+shuffle_trajectories: true # makes sense for linear sampling
+shuffle_within_batches: true # shuffle sequences within batches
+
+rnn_type: mgu # type of RNN (vanillarnn, resrnn or mgu)

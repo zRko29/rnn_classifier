@@ -12,19 +12,12 @@ batch_size: 256
 seq_len: 20 # only have one sequence
 loss: cross_entropy
 optimizer: adam
-bypass_n_steps: 2 # used in residual rnn
 lr: 1.0e-4
 precision: 16-mixed
+bypass_n_steps: 2
 
 shuffle_trajectories: true # makes sense for linear sampling
 shuffle_within_batches: true # shuffle sequences within batches
 
 rnn_type: vanillarnn # type of RNN (vanillarnn, resrnn or mgu)
 
-gridsearch:
-  batch_size: { lower: 64, upper: 512, type: int }
-  lr: { lower: -6, upper: -1, type: log }
-  num_rnn_layers: { lower: 1, upper: 6, type: int }
-  num_lin_layers: { lower: 1, upper: 6, type: int }
-  hidden_size: { lower: 32, upper: 256, type: int }
-  linear_size: { lower: 32, upper: 256, type: int }
