@@ -168,7 +168,7 @@ class BaseRNN(pl.LightningModule):
         loss = F.cross_entropy(
             predictions.to(self.dtype),
             targets.to(self.dtype),
-            weight=self.weight.to(self.dtype),
+            weight=self.weight.to(dtype=self.dtype, device=self.device),
         )
         pred = self.invert_one_hot_labels(predictions)
         # use predictions = (predictions.softmax(dim=1)[:, 1] >= threshold).long() to support different thresholds
