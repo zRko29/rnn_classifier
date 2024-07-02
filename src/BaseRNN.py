@@ -21,8 +21,8 @@ class BaseRNN(pl.LightningModule):
 
         self.nonlin_hidden = params.get("nonlinearity_hidden")
         self.nonlin_lin = self.configure_non_linearity(params.get("nonlinearity_lin"))
-        self.accuracy, self.f1, self.precision, self.recall = self.configure_metrics(
-            threshold=0.5
+        self.accuracy, self.precision, self.recall, self.specificity = (
+            self.configure_metrics(threshold=0.5)
         )
 
         # ------------------------------------------
@@ -68,10 +68,10 @@ class BaseRNN(pl.LightningModule):
 
     def configure_metrics(self, threshold: float) -> None:
         accuracy = torchmetrics.Accuracy(task="binary", threshold=threshold)
-        f1 = torchmetrics.F1Score(task="binary", threshold=threshold)
         precision = torchmetrics.Precision(task="binary", threshold=threshold)
         recall = torchmetrics.Recall(task="binary", threshold=threshold)
-        return accuracy, f1, precision, recall
+        specificity = torchmetrics.Specificity(task="binary", threshold=threshold)
+        return accuracy, precision, recall, specificity
 
     def configure_non_linearity(self, non_linearity: str) -> nn.Module:
         if non_linearity == "relu":
@@ -102,15 +102,26 @@ class BaseRNN(pl.LightningModule):
 
         predicted = self(inputs)
 
-        loss, accuracy, f1, precision, recall = self.compute_scores(predicted, targets)
+        loss, accuracy, precision, recall, specificity, f1, balanced_accuracy = (
+            self.compute_scores(predicted, targets)
+        )
         self.log_dict(
-            {"loss/train": loss, "f1/train": f1},
+            {
+                "loss/train": loss,
+                "f1/train": f1,
+                "balanced_acc/train": balanced_accuracy,
+            },
             on_epoch=True,
             prog_bar=True,
             on_step=False,
         )
         self.log_dict(
-            {"acc/train": accuracy, "prec/train": precision, "rec/train": recall},
+            {
+                "acc/train": accuracy,
+                "prec/train": precision,
+                "rec/train": recall,
+                "spec/train": specificity,
+            },
             on_epoch=True,
             prog_bar=False,
             on_step=False,
@@ -124,15 +135,22 @@ class BaseRNN(pl.LightningModule):
 
         predicted = self(inputs)
 
-        loss, accuracy, f1, precision, recall = self.compute_scores(predicted, targets)
+        loss, accuracy, precision, recall, specificity, f1, balanced_accuracy = (
+            self.compute_scores(predicted, targets)
+        )
         self.log_dict(
-            {"loss/val": loss, "f1/val": f1},
+            {"loss/val": loss, "f1/val": f1, "balanced_acc/val": balanced_accuracy},
             on_epoch=True,
             prog_bar=True,
             on_step=False,
         )
         self.log_dict(
-            {"acc/val": accuracy, "prec/val": precision, "rec/val": recall},
+            {
+                "acc/val": accuracy,
+                "prec/val": precision,
+                "rec/val": recall,
+                "spec/val": specificity,
+            },
             on_epoch=True,
             prog_bar=False,
             on_step=False,
@@ -147,8 +165,8 @@ class BaseRNN(pl.LightningModule):
         predicted = self(inputs[0])
         self.weight = torch.tensor([1, 1])
 
-        loss, accuracy, f1, precision, recall = self.compute_scores(
-            predicted, targets[0]
+        loss, accuracy, precision, recall, specificity, f1, balanced_accuracy = (
+            self.compute_scores(predicted, targets[0])
         )
 
         predicted_labels = self.invert_one_hot_labels(predicted.softmax(dim=1).round())
@@ -156,9 +174,11 @@ class BaseRNN(pl.LightningModule):
         return {
             "loss": loss,
             "accuracy": accuracy,
-            "f1": f1,
             "precision": precision,
             "recall": recall,
+            "specificity": specificity,
+            "f1": f1,
+            "balanced_accuracy": balanced_accuracy,
             "predicted_labels": predicted_labels,
         }
 
@@ -176,11 +196,14 @@ class BaseRNN(pl.LightningModule):
         targets = self.invert_one_hot_labels(targets)
 
         accuracy = self.accuracy(pred, targets)
-        f1 = self.f1(pred, targets)
         precision = self.precision(pred, targets)
         recall = self.recall(pred, targets)
+        specificity = self.specificity(pred, targets)
 
-        return loss, accuracy, f1, precision, recall
+        f1 = 2 * (precision * recall) / max(precision + recall, 1)
+        balanced_accuracy = (recall + specificity) / 2
+
+        return loss, accuracy, precision, recall, specificity, f1, balanced_accuracy
 
     def invert_one_hot_labels(self, labels: torch.Tensor) -> torch.Tensor:
         # works because one-hot encoding is [max, min] = 0 and [min, max] = 1
