@@ -63,8 +63,8 @@ class BaseRNN(pl.LightningModule):
         pos_neg_ratio = (len(labels) - sum(labels)) / sum(labels)
         pos_weight = 2 * pos_neg_ratio / (1 + pos_neg_ratio)
         neg_weight = 2 - pos_weight
-        # self.weight = torch.tensor([neg_weight, pos_weight])
-        self.weight = torch.tensor([1, 1])
+        self.weight = torch.tensor([neg_weight, pos_weight])
+        # self.weight = torch.tensor([1, 1])
 
     def configure_metrics(self, threshold: float) -> None:
         accuracy = torchmetrics.Accuracy(task="binary", threshold=threshold)
