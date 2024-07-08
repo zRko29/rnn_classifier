@@ -23,7 +23,7 @@ shuffle_within_batches: true # shuffle sequences within batches
 rnn_type: vanillarnn # type of RNN (vanillarnn, resrnn or mgu)
 
 gridsearch:
-  batch_size: { lower: 32, upper: 256, type: int }
-  lr: { lower: -5.2, upper: -3, type: log }
+  batch_size: { lower: 64, upper: 256, type: int }
+  lr: { lower: -5.4, upper: -2.8, type: log }
   nonlinearity_lin: { list: [elu, selu, leaky_relu, relu], type: choice }
-  rnn_type: { list: [vanillarnn, resrnn, mgu], type: choice }
+  rnn_type: { list: [vanillarnn, resrnn], type: choice }
