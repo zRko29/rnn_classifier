@@ -17,21 +17,22 @@ K_val:
 - 3.3
 - 3.4
 - 3.5
-batch_size: 179
+batch_size: 82
+bypass_n_steps: 10
 dropout: 0.0
 hidden_size: 200
 linear_sizes:
 - 100
 - 32
 loss: cross_entropy
-lr: 7.034560366211399e-06
+lr: 0.0009718887523814326
 nonlinearity_hidden: tanh
-nonlinearity_lin: relu
+nonlinearity_lin: selu
 num_lin_layers: 3
 num_rnn_layers: 3
 optimizer: adam
 precision: 16-mixed
-rnn_type: mgu
-seq_len: 10
+rnn_type: resrnn
+seq_len: 20
 shuffle_trajectories: true
 shuffle_within_batches: true
