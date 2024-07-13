@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     logger = setup_logger(args.path, "rnn_classifier")
 
-    params_path = os.path.join(args.path, "current_params.yaml")
+    params_path = os.path.join(args.path, "parameters.yaml")
     params = read_yaml(params_path)
 
     main(args, params)
