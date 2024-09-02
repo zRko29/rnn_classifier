@@ -43,7 +43,7 @@ def get_callbacks(args: Namespace, save_path: str) -> List[callbacks]:
             monitor=args.monitor_stopping,
             mode=args.mode_stopping,
             min_delta=5e-2,
-            patience=10,
+            patience=20,
         ),
     ]
 

@@ -37,8 +37,37 @@ class StandardMap:
         threshold: int = 11,
     ) -> np.ndarray:
         if binary:
-            self.spectrum = (self.spectrum * 1.0e5 > threshold).astype(int)
+            # self.spectrum = (self.spectrum * 1.0e5 > threshold).astype(int)
+            self.spectrum = self.determine_labels(self.spectrum)
         return self.spectrum
+
+    def determine_labels(
+        self, spectrum: np.ndarray, K_list: float | List[float]
+    ) -> np.ndarray:
+        if not isinstance(K_list, list):
+            K_list = [K_list]
+
+        # split spectrum into subsets
+        subsets = np.split(spectrum, len(K_list))
+        labels = np.array([])
+
+        for K, subsets in zip(K_list, subsets):
+            if K < 0.5:
+                # 0.2 appended to avoid errors with small K
+                counts, bins = np.histogram(np.append(subsets, 0.2), bins=50)
+            else:
+                counts, bins = np.histogram(subsets, bins=50)
+
+            min_id = np.where(counts == counts.min())[0][0]
+            min_value = bins[min_id + 1]
+
+            lbls = subsets.copy()
+            lbls[subsets < min_value] = 0
+            lbls[subsets >= min_value] = 1
+
+            labels = np.append(labels, lbls)
+
+        return labels.astype(int)
 
     def save_data(self, data_path: str) -> None:
         np.save(f"{data_path}/theta_values.npy", self.theta_values)
@@ -166,6 +195,9 @@ class StandardMap:
             theta_init = theta_init.flatten()
             p_init = p_init.flatten()
 
+        else:
+            raise ValueError("Invalid sampling method.")
+
         return theta_init, p_init
 
     def plot_data(
@@ -212,10 +244,11 @@ class StandardMap:
 
 if __name__ == "__main__":
     # standard
-    # map = StandardMap(init_points=100, steps=300, sampling="random", K=0.9, seed=42)
-    # map.generate_data(lyapunov=True)
+    # map = StandardMap(
+    #     init_points=10, steps=300, sampling="random", K=[0.5, 1.0, 1.5, 2.0], seed=42
+    # )
+    # map.generate_data(lyapunov=False)
     # spectrum = map.retrieve_spectrum()
-    # print((spectrum * 10**5 > 11).astype(int).sum())
     # map.plot_data()
 
     # vary chaos threshold
@@ -231,19 +264,19 @@ if __name__ == "__main__":
     #             save_path=f"plots/K_{K}/threshold_{round(threshold,1)}.pdf",
     #         )
 
-    
-
-
-
-    # for K in np.arange(3.0, 3.6, 0.1):
-    #     K = round(K, 1)
-    #     path = "training_data"
-    #     if str(K) not in os.listdir(path):
-    #         print()
-    #         print(f"{K = }")
-    #         os.mkdir(f"{path}/{K}")
-    #         map = StandardMap(
-    #             init_points=2601, steps=1000, sampling="grid", K=K, seed=42
-    #         )
-    #         map.generate_data(lyapunov=True)
-    #         map.save_data(data_path=f"{path}/{K}")
+    # for K in [0.1]:
+    # for K in [1.0]:
+    # for K in [1.5]:
+    for K in [2.0]:
+        # for K in np.arange(3.0, 3.6, 0.1):
+        # K = round(K, 1)
+        path = "regression"
+        if str(K) not in os.listdir(path):
+            print()
+            print(f"{K = }")
+            os.mkdir(f"{path}/{K}")
+            map = StandardMap(
+                init_points=10_000, steps=300, sampling="grid", K=K, seed=42
+            )
+            map.generate_data(lyapunov=True)
+            map.save_data(data_path=f"{path}/{K}")

@@ -104,13 +104,14 @@ class Data(pl.LightningDataModule):
     def one_hot_labels(self, labels: np.ndarray) -> np.ndarray:
         return [[1 - label, label] for label in labels]
 
+    @staticmethod
     def _load_data(
-        self, path: str, K: List[float] | float, binary: bool
+        path: str, K: List[float] | float, binary: bool
     ) -> Tuple[np.ndarray]:
         if not isinstance(K, list):
             K = [K]
 
-        directories: List[str] = self._get_subdirectories(path, K)
+        directories: List[str] = _get_subdirectories(path, K)
 
         thetas_list = [
             np.load(os.path.join(directory, "theta_values.npy"))
@@ -130,19 +131,45 @@ class Data(pl.LightningDataModule):
         spectrum = np.concatenate(spectrum_list)
 
         if binary:
-            spectrum = (spectrum * 1e5 > 11).astype(int)
+            # spectrum = (spectrum * 1e5 > 11).astype(int)
+            spectrum = determine_labels(spectrum, K)
 
         return thetas, ps, spectrum
 
-    def _get_subdirectories(self, directory: str, K: List[float]) -> List[str]:
-        subdirectories = []
-        for d in os.listdir(directory):
-            if os.path.isdir(os.path.join(directory, d)):
-                if float(d) in K:
-                    subdirectories.append(os.path.join(directory, d))
 
-        subdirectories.sort()
-        return subdirectories
+def determine_labels(spectrum: np.ndarray, K_list: List[float]) -> np.ndarray:
+    # split spectrum into subsets
+    subsets = np.split(spectrum, len(K_list))
+    labels = np.array([])
+
+    for K, subsets in zip(K_list, subsets):
+        if K < 0.5:
+            # 0.2 appended to avoid errors with small K
+            counts, bins = np.histogram(np.append(subsets, 0.2), bins=50)
+        else:
+            counts, bins = np.histogram(subsets, bins=50)
+
+        min_id = np.where(counts == counts.min())[0][0]
+        min_value = bins[min_id + 1]
+
+        lbls = subsets.copy()
+        lbls[subsets < min_value] = 0
+        lbls[subsets >= min_value] = 1
+
+        labels = np.append(labels, lbls)
+
+    return labels.astype(int)
+
+
+def _get_subdirectories(directory: str, K: List[float]) -> List[str]:
+    subdirectories = []
+    for d in os.listdir(directory):
+        if os.path.isdir(os.path.join(directory, d)):
+            if float(d) in K:
+                subdirectories.append(os.path.join(directory, d))
+
+    subdirectories.sort()
+    return subdirectories
 
 
 class Dataset(torch.utils.data.Dataset):
