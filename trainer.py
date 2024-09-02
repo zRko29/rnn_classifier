@@ -86,7 +86,7 @@ def main(
         benchmark=True,
         check_val_every_n_epoch=3,
         enable_progress_bar=args.progress_bar,
-        # devices=args.devices,
+        devices=args.devices,
         num_nodes=args.num_nodes,
     )
 
