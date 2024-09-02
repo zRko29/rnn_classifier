@@ -86,7 +86,7 @@ def main(
         benchmark=True,
         check_val_every_n_epoch=3,
         enable_progress_bar=args.progress_bar,
-        devices=args.devices,
+        # devices=args.devices,
         num_nodes=args.num_nodes,
     )
 
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     logger = setup_logger(args.path, "rnn_classifier")
 
-    params_path = os.path.join(args.path, "parameters.yaml")
+    params_path = os.path.join(args.path, "current_params.yaml")
     params = read_yaml(params_path)
 
     main(args, params)
