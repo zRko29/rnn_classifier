@@ -18,4 +18,4 @@ conda activate rnn_env
 
 experiment=logs/seq_len/
 
-srun python trainer.py --num_nodes 1 --devices 0 --train_size 1.0 --monitor_checkpoint balanced_acc/val --mode_checkpoint max --epochs 250 --path $experiment
+srun python trainer.py --num_nodes 1 --devices 0 --train_size 1.0 --monitor_checkpoint balanced_acc/val --mode_checkpoint max --epochs 200 --path $experiment
