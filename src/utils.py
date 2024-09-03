@@ -107,20 +107,23 @@ class Gridsearch:
         rng: np.random.Generator = np.random.default_rng(None)
 
         for key, space in params.get("gridsearch").items():
-            type = space.get("type")
-            if type == "int":
+            search_type = space.get("type")
+            if search_type == "int":
                 params[key] = int(rng.integers(space["lower"], space["upper"] + 1))
-            elif type == "choice":
+            elif search_type == "choice":
                 list = space.get("list")
                 choice = rng.choice(list)
-                try:
+                if isinstance(choice, np.integer):
+                    choice = int(choice)
+                elif isinstance(choice, np.floating):
                     choice = float(choice)
-                except:
+                if isinstance(choice, np.str_):
                     choice = str(choice)
+
                 params[key] = choice
-            elif type == "float":
+            elif search_type == "float":
                 params[key] = rng.uniform(space["lower"], space["upper"])
-            elif type == "log":
+            elif search_type == "log":
                 log_value = rng.uniform(space["lower"], space["upper"])
                 params[key] = 10**log_value
 
@@ -181,19 +184,35 @@ def subplot_labeled_data(
         ax[index].plot(
             thetas[:, chaotic_indices],
             ps[:, chaotic_indices],
-            "ro",
+            "o",
+            color="lightgray",
             markersize=0.5,
         )
         ax[index].plot(
             thetas[:, regular_indices],
             ps[:, regular_indices],
-            "bo",
+            "o",
+            color="dimgray",
             markersize=0.5,
         )
         legend_handles = [
-            plt.scatter([], [], color="red", marker=".", label="Chaotic"),
-            plt.scatter([], [], color="blue", marker=".", label="Regular"),
+            plt.scatter([], [], color="lightgray", marker=".", label="Kaotično"),
+            plt.scatter([], [], color="dimgray", marker=".", label="Regularno"),
         ]
+
+        if index > 0:
+            mismatch_indices = np.where(spectrum[index].numpy() != spectrum[0])[0]
+            ax[index].plot(
+                thetas[:, mismatch_indices],
+                ps[:, mismatch_indices],
+                "o",
+                color="red",
+                markersize=0.5,
+            )
+            legend_handles.append(
+                plt.scatter([], [], color="red", marker=".", label="Napačno")
+            )
+
         ax[index].set_xlabel(r"$\theta$")
         ax[0].set_ylabel("p")
         ax[index].set_xlim(-0.05, 1.05)
@@ -203,6 +222,7 @@ def subplot_labeled_data(
     plt.legend(handles=legend_handles, bbox_to_anchor=(1.0, 1.0))
     plt.tight_layout()
     if save_path is not None:
+        plt.savefig(save_path + ".png")
         plt.savefig(save_path + ".pdf")
         plt.close()
     plt.show()
@@ -217,15 +237,17 @@ def plot_f1_scores(
     save_path: str = None,
 ) -> None:
     plt.figure(figsize=(7, 4))
-    plt.plot(seq_lens, f1_scores, color="tab:blue", label="F1")
-    plt.plot(seq_lens, accuracies, color="tab:red", label="Accuracy")
+    plt.plot(seq_lens, f1_scores, color="tab:blue", label="UT")
+    plt.plot(seq_lens, accuracies, color="tab:red", label="ACC")
     plt.xlabel(x_label)
-    plt.ylabel("score")
+    # plt.ylabel("score")
     plt.yticks(np.arange(0, 1.1, 0.1))
     # plt.title(f"{K = }")
+    plt.axvspan(2, 3, 0, 1, color="gray", alpha=0.5)
     plt.legend()
     plt.grid()
     if save_path is not None:
+        plt.savefig(save_path + ".png")
         plt.savefig(save_path + ".pdf")
         plt.close()
     plt.show()
